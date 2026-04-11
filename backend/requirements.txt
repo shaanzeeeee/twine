@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+chromadb
+openai
+apscheduler
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+pymupdf
+python-docx
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+pydantic

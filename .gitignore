@@ -1,0 +1,37 @@
+# Environments
+.env
+.venv
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+out/
+.vercel
+
+# Data & Secrets
+chroma_data/
+token.json
+credentials.json
+*.log
+test_results.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
+New Text Document.txt
+*.png
