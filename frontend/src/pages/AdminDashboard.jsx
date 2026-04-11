@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import { MessageSquare, Star, ArrowLeft, LogOut } from 'lucide-react';
+import { MessageSquare, Star, ArrowLeft, LogOut, Shield, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
@@ -32,7 +32,6 @@ const AdminDashboard = () => {
     const handleUpvote = async (messageId) => {
         try {
             await api.post(`/admin/upvote/${messageId}`);
-            // Update local state to reflect upvoted status
             const updatedSessions = sessions.map(session => {
                 if (session.session_id === selectedSession.session_id) {
                     return {
@@ -49,7 +48,6 @@ const AdminDashboard = () => {
             setSelectedSession(updatedSelected);
         } catch (error) {
             console.error("Failed to upvote", error);
-            alert("Failed to upvote message");
         }
     };
 
@@ -58,80 +56,102 @@ const AdminDashboard = () => {
         navigate('/login');
     };
 
-    if (loading) return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center space-y-4">
+            <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+            <p className="text-[10px] uppercase tracking-widest font-black">Decrypting Secure Channels...</p>
+        </div>
+    );
 
     return (
-        <div className="flex h-screen bg-gray-900 text-white font-sans overflow-hidden">
-            {/* Sidebar List of Sessions */}
-            <div className="w-80 bg-gray-900 border-r border-gray-800 flex flex-col h-full">
-                <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-950">
-                    <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-blue-500" />
-                        Transcripts
-                    </h2>
-                    <button onClick={handleLogout} className="text-gray-400 hover:text-white" title="Logout">
-                        <LogOut className="w-5 h-5" />
+        <div className="flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden">
+            {/* Sidebar */}
+            <div className="w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl z-20">
+                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/40">
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-red-600" />
+                        <h2 className="text-xs font-black uppercase tracking-widest text-gray-100">
+                           Intelligence Logs
+                        </h2>
+                    </div>
+                    <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition" title="Logout">
+                        <LogOut className="w-4 h-4" />
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-gray-900">
+                <div className="flex-1 overflow-y-auto p-4 space-y-2">
                     {sessions.map((session) => (
                         <button
                             key={session.session_id}
                             onClick={() => setSelectedSession(session)}
-                            className={`w-full text-left p-3 rounded-lg flex flex-col gap-1 transition-colors ${
+                            className={`w-full text-left p-4 transition-all duration-300 relative group overflow-hidden ${
                                 selectedSession?.session_id === session.session_id
-                                ? 'bg-gray-800 border-l-2 border-blue-500'
-                                : 'hover:bg-gray-800/50'
+                                ? 'bg-zinc-800 shadow-xl scale-[1.02] border-l-4 border-red-600 skew-x-[-2deg]'
+                                : 'hover:bg-zinc-900/50 grayscale hover:grayscale-0'
                             }`}
                         >
-                            <span className="text-sm font-medium text-gray-200">
-                                Session #{session.session_id}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                                {new Date(session.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} • {session.messages.length} msgs
+                            <div className="flex justify-between items-start relative z-10">
+                                <span className={`text-[10px] font-black uppercase tracking-tighter ${
+                                    selectedSession?.session_id === session.session_id ? 'text-white' : 'text-gray-500'
+                                }`}>
+                                    Vector Session #{session.session_id}
+                                </span>
+                                <ChevronRight size={14} className={selectedSession?.session_id === session.session_id ? 'text-red-600' : 'text-zinc-800'} />
+                            </div>
+                            <span className="text-[10px] font-bold text-zinc-600 mt-1 block">
+                                {new Date(session.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} • {session.messages.length} Units
                             </span>
                         </button>
                     ))}
                     {sessions.length === 0 && (
-                        <div className="p-4 text-sm text-gray-500 text-center">No chat sessions found.</div>
+                        <div className="p-4 text-[10px] uppercase font-bold text-zinc-700 text-center tracking-widest">Zero active signals.</div>
                     )}
                 </div>
             </div>
 
-            {/* Main Chat Viewer */}
-            <div className="flex-1 flex flex-col h-full bg-gray-800">
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] relative">
+                 <div className="absolute inset-0 opacity-5 bg-[url('/gym-bg.png')] bg-cover bg-center grayscale" />
+                
                 {selectedSession ? (
                     <>
-                        <div className="h-14 border-b border-gray-700 bg-gray-800/80 backdrop-blur flex items-center px-6 justify-between shrink-0">
-                            <h3 className="font-semibold text-gray-200">Session #{selectedSession.session_id} details</h3>
+                        <div className="relative z-10 h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex items-center px-8 justify-between shrink-0">
+                            <div>
+                                <h3 className="text-xs font-black uppercase tracking-widest text-white italic">KingsBox Intelligence Report</h3>
+                                <p className="text-[10px] text-zinc-500 font-bold">Session ID: {selectedSession.session_id}</p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                                <span className="text-[10px] font-black uppercase text-red-600">Secure Feed</span>
+                            </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            {selectedSession.messages.map((msg, index) => {
+                        
+                        <div className="relative z-10 flex-1 overflow-y-auto p-10 space-y-8">
+                            {selectedSession.messages.map((msg) => {
                                 const isUser = msg.role === 'user';
                                 return (
-                                    <div key={msg.id} className={`flex max-w-[85%] ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}>
-                                        <div className={`p-4 rounded-2xl relative group ${
+                                    <div key={msg.id} className={`flex max-w-[90%] ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}>
+                                        <div className={`relative px-6 py-4 shadow-2xl transition-all border border-white/5 backdrop-blur-sm ${
                                             isUser 
-                                            ? 'bg-blue-600 text-white rounded-br-none' 
-                                            : 'bg-gray-700 text-gray-100 rounded-bl-none shadow-sm'
+                                            ? 'bg-red-600/90 text-white skew-x-[-2deg]' 
+                                            : 'bg-zinc-900/90 text-zinc-100 skew-x-[2deg]'
                                         }`}>
-                                            <div className="text-sm prose prose-invert max-w-none">
+                                            <div className={`text-sm font-medium leading-relaxed ${isUser ? 'skew-x-[2deg]' : 'skew-x-[-2deg]'}`}>
                                                 {msg.content}
                                             </div>
                                             
                                             {!isUser && (
-                                                <div className="pt-3 mt-3 border-t border-gray-600/50 flex">
+                                                <div className="pt-4 mt-4 border-t border-white/5 flex skew-x-[-2deg]">
                                                     <button 
                                                         onClick={() => handleUpvote(msg.id)}
                                                         disabled={msg.upvoted}
-                                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                                                        className={`flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${
                                                             msg.upvoted 
-                                                            ? 'text-yellow-400 bg-yellow-400/10 cursor-default' 
-                                                            : 'text-gray-300 bg-gray-600 hover:bg-blue-600 hover:text-white'
+                                                            ? 'text-red-500 bg-red-500/10' 
+                                                            : 'text-zinc-500 bg-black/40 hover:bg-red-600 hover:text-white'
                                                         }`}
                                                     >
-                                                        <Star className={`w-4 h-4 ${msg.upvoted ? 'fill-current' : ''}`} />
-                                                        {msg.upvoted ? 'Added to Memory' : 'Add to Memory'}
+                                                        <Star className={`w-3 h-3 ${msg.upvoted ? 'fill-current' : ''}`} />
+                                                        {msg.upvoted ? 'Committed to Memory' : 'Authorize to Memory'}
                                                     </button>
                                                 </div>
                                             )}
@@ -142,19 +162,19 @@ const AdminDashboard = () => {
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-                        <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
-                        <p>Select a session to view the transcript</p>
+                    <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-zinc-800">
+                        <MessageSquare className="w-16 h-16 mb-4 opacity-10" />
+                        <p className="text-[10px] uppercase font-black tracking-[0.3em]">Standby for Data Selection</p>
                     </div>
                 )}
             </div>
             
             <button 
                 onClick={() => navigate('/')} 
-                className="absolute bottom-6 right-6 p-3 bg-blue-600 hover:bg-blue-700 rounded-full shadow-lg text-white transition-transform hover:scale-105"
+                className="absolute bottom-10 right-10 w-14 h-14 bg-red-600 flex items-center justify-center shadow-[0_0_30px_rgba(227,30,36,0.3)] text-white transition-all hover:scale-110 active:scale-95 z-30 rotate-45 group hover:rotate-0"
                 title="Go to Chat"
             >
-                <ArrowLeft className="w-6 h-6" />
+                <ArrowLeft className="w-6 h-6 -rotate-45 group-hover:rotate-0" />
             </button>
         </div>
     );
