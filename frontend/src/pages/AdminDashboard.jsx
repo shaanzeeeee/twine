@@ -21,6 +21,7 @@ const AdminDashboard = () => {
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
     const [search, setSearch] = useState('');
     const [minMessages, setMinMessages] = useState(0);
+    const [showArchived, setShowArchived] = useState(false);
     const [toast, setToast] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [pendingDiscard, setPendingDiscard] = useState(null);
@@ -29,14 +30,16 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchTranscripts();
-    }, [search, minMessages]);
+    }, [search, minMessages, showArchived]);
 
     useEffect(() => {
         if (!pendingDiscard) return undefined;
 
         const timerId = window.setTimeout(async () => {
             try {
-                await api.delete(`/admin/sessions/${pendingDiscard.session.session_id}`);
+                await api.delete(`/admin/sessions/${pendingDiscard.session.session_id}`, {
+                    data: { reason: 'Discarded from admin review' },
+                });
                 pushToast(`Session #${pendingDiscard.session.session_id} discarded`, 'info');
             } catch (error) {
                 // Restore if backend discard fails.
@@ -61,7 +64,8 @@ const AdminDashboard = () => {
 
     const fetchTranscripts = async () => {
         try {
-            const response = await api.get('/admin/transcripts', {
+            const endpoint = showArchived ? '/admin/transcripts/archive' : '/admin/transcripts';
+            const response = await api.get(endpoint, {
                 params: {
                     search,
                     min_messages: minMessages,
@@ -139,6 +143,17 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleRestoreSession = async () => {
+        if (!selectedSession) return;
+        try {
+            await api.post(`/admin/sessions/${selectedSession.session_id}/restore`);
+            removeSessionFromState(selectedSession.session_id);
+            pushToast(`Session #${selectedSession.session_id} restored`, 'info');
+        } catch (error) {
+            pushToast('Failed to restore session', 'error');
+        }
+    };
+
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -188,6 +203,12 @@ const AdminDashboard = () => {
                     </button>
                 </div>
                 <div className="p-4 border-b border-white/5 space-y-3">
+                    <button
+                        onClick={() => setShowArchived((prev) => !prev)}
+                        className={`w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${showArchived ? 'bg-amber-900/30 text-amber-200 border-amber-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
+                    >
+                        {showArchived ? 'Viewing Archive' : 'Viewing Active Sessions'}
+                    </button>
                     <input
                         type="text"
                         value={search}
@@ -232,7 +253,7 @@ const AdminDashboard = () => {
                                 {formatDateTime(session.created_at)} • {session.message_count} Units
                             </span>
                             <span className="inline-block mt-2 px-2 py-1 text-[9px] uppercase tracking-widest font-black text-amber-300 bg-amber-900/30 border border-amber-700/30">
-                                Pending Review
+                                {(session.status || 'pending_review').replace('_', ' ')}
                             </span>
                         </button>
                     ))}
@@ -278,20 +299,32 @@ const AdminDashboard = () => {
                                     <Download className="w-3 h-3" />
                                     Export
                                 </button>
-                                <button
-                                    onClick={handleAddSessionToDatabase}
-                                    className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-emerald-700 transition-all"
-                                >
-                                    <Database className="w-3 h-3" />
-                                    Add to Database
-                                </button>
-                                <button
-                                    onClick={() => setShowDiscardConfirm(true)}
-                                    className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-red-700 transition-all"
-                                >
-                                    <Trash2 className="w-3 h-3" />
-                                    Discard
-                                </button>
+                                {showArchived ? (
+                                    <button
+                                        onClick={handleRestoreSession}
+                                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-blue-700 transition-all"
+                                    >
+                                        <Database className="w-3 h-3" />
+                                        Restore Session
+                                    </button>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={handleAddSessionToDatabase}
+                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-emerald-700 transition-all"
+                                        >
+                                            <Database className="w-3 h-3" />
+                                            Add to Database
+                                        </button>
+                                        <button
+                                            onClick={() => setShowDiscardConfirm(true)}
+                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-red-700 transition-all"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                            Discard
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                         

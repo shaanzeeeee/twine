@@ -2,12 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
+from datetime import datetime, timezone
+from pydantic import BaseModel
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message, User
 from backend.api.deps import get_current_admin_user
 from backend.services.chroma_service import chroma_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class DiscardSessionRequest(BaseModel):
+    reason: str = ""
 
 
 def _build_qa_documents(messages: List[Message], session_id: int):
@@ -43,12 +49,19 @@ def _build_qa_documents(messages: List[Message], session_id: int):
 def get_transcripts(
     search: str = Query(default=""),
     min_messages: int = Query(default=0, ge=0),
+    include_discarded: bool = Query(default=False),
     limit: int = Query(default=200, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
 ):
     """Fetch chat sessions and messages with optional filtering."""
-    sessions = db.query(ChatSession).order_by(desc(ChatSession.created_at)).limit(limit).all()
+    session_query = db.query(ChatSession)
+    if include_discarded:
+        session_query = session_query.filter(ChatSession.discarded_at.isnot(None))
+    else:
+        session_query = session_query.filter(ChatSession.discarded_at.is_(None))
+
+    sessions = session_query.order_by(desc(ChatSession.created_at)).limit(limit).all()
     needle = search.strip().lower()
     
     result = []
@@ -71,8 +84,10 @@ def get_transcripts(
                 "session_id": session.id,
                 "guest_name": session.guest_name,
                 "created_at": session.created_at,
+                "discarded_at": session.discarded_at,
+                "discard_reason": session.discard_reason,
                 "message_count": len(messages),
-                "status": "pending_review",
+                "status": session.review_status,
                 "messages": [
                     {
                         "id": m.id,
@@ -86,6 +101,25 @@ def get_transcripts(
             }
         )
     return result
+
+
+@router.get("/transcripts/archive")
+def get_archived_transcripts(
+    search: str = Query(default=""),
+    min_messages: int = Query(default=0, ge=0),
+    limit: int = Query(default=200, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Fetch archived (soft-deleted) sessions only."""
+    return get_transcripts(
+        search=search,
+        min_messages=min_messages,
+        include_discarded=True,
+        limit=limit,
+        db=db,
+        current_user=current_user,
+    )
 
 
 @router.get("/sessions/{session_id}/export")
@@ -110,6 +144,9 @@ def export_session(
         "session_id": session.id,
         "guest_name": session.guest_name,
         "created_at": session.created_at,
+        "discarded_at": session.discarded_at,
+        "discard_reason": session.discard_reason,
+        "status": session.review_status,
         "message_count": len(messages),
         "messages": [
             {
@@ -196,7 +233,9 @@ def add_session_to_database(
         if msg.role == "assistant":
             msg.upvoted = True
 
-    db.delete(session)
+    session.review_status = "approved"
+    session.discarded_at = datetime.now(timezone.utc)
+    session.discard_reason = "Added to database"
     db.commit()
 
     return {
@@ -209,14 +248,35 @@ def add_session_to_database(
 @router.delete("/sessions/{session_id}")
 def discard_session(
     session_id: int,
+    payload: DiscardSessionRequest = DiscardSessionRequest(),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
 ):
-    """Discard a full session and all of its messages from transcript review."""
+    """Soft-delete a session from active review while preserving its history."""
     session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    db.delete(session)
+    session.review_status = "discarded"
+    session.discarded_at = datetime.now(timezone.utc)
+    session.discard_reason = payload.reason.strip()[:255] if payload.reason else None
     db.commit()
     return {"status": "success", "message": "Session discarded"}
+
+
+@router.post("/sessions/{session_id}/restore")
+def restore_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Restore a soft-deleted session back to active review."""
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session.review_status = "pending_review"
+    session.discarded_at = None
+    session.discard_reason = None
+    db.commit()
+    return {"status": "success", "message": "Session restored"}

@@ -22,11 +22,15 @@ def ensure_runtime_schema():
         return
 
     column_names = {column["name"] for column in inspector.get_columns("chat_sessions")}
-    if "guest_name" in column_names:
-        return
-
     with engine.begin() as connection:
-        connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN guest_name VARCHAR(100)"))
+        if "guest_name" not in column_names:
+            connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN guest_name VARCHAR(100)"))
+        if "review_status" not in column_names:
+            connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN review_status VARCHAR(50) DEFAULT 'pending_review'"))
+        if "discarded_at" not in column_names:
+            connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN discarded_at TIMESTAMP"))
+        if "discard_reason" not in column_names:
+            connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN discard_reason VARCHAR(255)"))
 
 
 ensure_runtime_schema()
