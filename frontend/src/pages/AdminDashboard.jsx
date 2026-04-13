@@ -20,7 +20,10 @@ const AdminDashboard = () => {
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
     const [viewMode, setViewMode] = useState('transcripts');
+    const [page, setPage] = useState(1);
+    const [hasNextPage, setHasNextPage] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [sessionLoading, setSessionLoading] = useState(false);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
     const [search, setSearch] = useState('');
     const [minMessages, setMinMessages] = useState(0);
@@ -33,7 +36,7 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchTranscripts();
-    }, [search, minMessages, showArchived]);
+    }, [search, minMessages, showArchived, page]);
 
     useEffect(() => {
         if (!pendingDiscard) return undefined;
@@ -72,20 +75,44 @@ const AdminDashboard = () => {
                 params: {
                     search,
                     min_messages: minMessages,
+                    page,
+                    page_size: 25,
+                    paged: true,
+                    summary_only: true,
                 },
             });
-            setSessions(response.data);
-            if (response.data.length > 0 && !selectedSession) {
-                setSelectedSession(response.data[0]);
+            const items = response.data.items || [];
+            setSessions(items);
+            setHasNextPage(Boolean(response.data.has_next));
+
+            if (items.length > 0 && !selectedSession) {
+                await loadSessionDetails(items[0]);
             } else if (selectedSession) {
-                const refreshed = response.data.find((s) => s.session_id === selectedSession.session_id);
-                setSelectedSession(refreshed || response.data[0] || null);
+                const refreshed = items.find((s) => s.session_id === selectedSession.session_id);
+                if (refreshed) {
+                    setSelectedSession((prev) => ({ ...refreshed, messages: prev?.messages || [] }));
+                } else {
+                    setSelectedSession(null);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch transcripts", error);
             pushToast('Failed to fetch transcripts', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadSessionDetails = async (sessionSummary) => {
+        try {
+            setSessionLoading(true);
+            const response = await api.get(`/admin/sessions/${sessionSummary.session_id}/export`);
+            setSelectedSession(response.data);
+        } catch (error) {
+            pushToast('Failed to load full session', 'error');
+            setSelectedSession(sessionSummary);
+        } finally {
+            setSessionLoading(false);
         }
     };
 
@@ -245,6 +272,22 @@ const AdminDashboard = () => {
                         <option value={8}>8+ messages</option>
                         <option value={12}>12+ messages</option>
                     </select>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={page <= 1}
+                            className="flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"
+                        >
+                            Prev
+                        </button>
+                        <button
+                            onClick={() => setPage((prev) => prev + 1)}
+                            disabled={!hasNextPage}
+                            className="flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                     {viewMode === 'analytics' && (
@@ -255,8 +298,8 @@ const AdminDashboard = () => {
                     {sessions.map((session) => (
                         <button
                             key={session.session_id}
-                            onClick={() => {
-                                setSelectedSession(session);
+                            onClick={async () => {
+                                await loadSessionDetails(session);
                                 setSidebarOpen(false);
                             }}
                             className={`w-full text-left p-4 transition-all duration-300 relative group overflow-hidden ${
@@ -365,7 +408,10 @@ const AdminDashboard = () => {
                         </div>
                         
                         <div className="relative z-10 flex-1 overflow-y-auto p-10 space-y-8">
-                            {selectedSession.messages.map((msg) => {
+                            {sessionLoading && (
+                                <div className="text-xs uppercase tracking-widest text-zinc-500">Loading full session...</div>
+                            )}
+                            {(selectedSession.messages || []).map((msg) => {
                                 const isUser = msg.role === 'user';
                                 return (
                                     <div key={msg.id} className={`flex max-w-[90%] ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}>

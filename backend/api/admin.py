@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List
@@ -8,12 +9,16 @@ from collections import defaultdict
 import re
 import csv
 import io
+import time
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message, User, AnalyticsAlertRule
 from backend.api.deps import get_current_admin_user
 from backend.services.chroma_service import chroma_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+ANALYTICS_CACHE_TTL_SECONDS = 30
+_analytics_cache = {}
 
 
 class DiscardSessionRequest(BaseModel):
@@ -51,6 +56,29 @@ def _compare_metric(value: float, comparator: str, threshold: float) -> bool:
     if comparator == "==":
         return value == threshold
     return value >= threshold
+
+
+def _cache_key(prefix: str, **kwargs) -> str:
+    ordered = "|".join(f"{k}={kwargs[k]}" for k in sorted(kwargs.keys()))
+    return f"{prefix}|{ordered}"
+
+
+def _cache_get(key: str):
+    cached = _analytics_cache.get(key)
+    if not cached:
+        return None
+    if time.time() - cached["ts"] > ANALYTICS_CACHE_TTL_SECONDS:
+        _analytics_cache.pop(key, None)
+        return None
+    return cached["value"]
+
+
+def _cache_set(key: str, value):
+    _analytics_cache[key] = {"ts": time.time(), "value": value}
+
+
+def _invalidate_analytics_cache():
+    _analytics_cache.clear()
 
 
 def _collect_window_data(db: Session, days: int):
@@ -103,6 +131,11 @@ def get_analytics_overview(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Return aggregated admin analytics for sessions and messages."""
+    cache_key = _cache_key("analytics_overview", days=days)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     from datetime import timedelta
     now, start_time, sessions, messages = _collect_window_data(db, days)
 
@@ -175,7 +208,7 @@ def get_analytics_overview(
         )
         cursor = cursor + timedelta(days=1)
 
-    return {
+    result = {
         "window_days": days,
         "kpis": {
             "total_sessions": total_sessions,
@@ -191,6 +224,8 @@ def get_analytics_overview(
         "top_guests": top_guests,
         "daily_trends": trend_days,
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/analytics/deep-dive")
@@ -200,6 +235,11 @@ def get_analytics_deep_dive(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Return deeper analysis: topic clusters, quality heuristics, and operations metrics."""
+    cache_key = _cache_key("analytics_deep", days=days)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     now, _start_time, sessions, messages = _collect_window_data(db, days)
 
     # Topic and intent extraction from user messages
@@ -329,7 +369,7 @@ def get_analytics_deep_dive(
     ]
     topic_outcome_rows = sorted(topic_outcome_rows, key=lambda row: (row["approved"] + row["pending_review"] + row["discarded"]), reverse=True)[:12]
 
-    return {
+    result = {
         "window_days": days,
         "top_topics": top_topics,
         "quality": quality,
@@ -339,6 +379,8 @@ def get_analytics_deep_dive(
         "operations": operations,
         "topic_outcomes": topic_outcome_rows,
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/analytics/topic-trends")
@@ -349,6 +391,11 @@ def get_topic_trends(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Return daily trend lines for top topic terms."""
+    cache_key = _cache_key("analytics_topic_trends", days=days, top_n=top_n)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     now, start_time, _sessions, messages = _collect_window_data(db, days)
 
     daily_topic_counts = defaultdict(lambda: defaultdict(int))
@@ -378,7 +425,9 @@ def get_topic_trends(
         rows.append(row)
         cursor = cursor + timedelta(days=1)
 
-    return {"window_days": days, "topics": top_topics, "series": rows}
+    result = {"window_days": days, "topics": top_topics, "series": rows}
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/analytics/regression")
@@ -388,6 +437,11 @@ def get_regression_monitor(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Compare current window against previous equal-length window."""
+    cache_key = _cache_key("analytics_regression", days=days)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     from datetime import timedelta
 
     now = datetime.now(timezone.utc)
@@ -425,11 +479,13 @@ def get_regression_monitor(
     if deltas["sessions"]["absolute"] < 0 and deltas["sessions"]["percent"] < -20:
         regressions.append("Session volume dropped more than 20%")
 
-    return {
+    result = {
         "window_days": days,
         "deltas": deltas,
         "regressions": regressions,
     }
+    _cache_set(cache_key, result)
+    return result
 
 
 @router.get("/analytics/report")
@@ -440,13 +496,39 @@ def export_analytics_report(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Export analytics report as JSON or CSV."""
+    format_value = format.lower()
+    cache_key = _cache_key("analytics_report", days=days, format=format_value)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        if format_value == "csv":
+            return Response(
+                content=cached["csv"],
+                media_type="text/csv",
+                headers={"Content-Disposition": f"attachment; filename={cached['filename']}"},
+            )
+        return Response(
+            content=cached,
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename=analytics-{days}d.json"},
+        )
+
     overview = get_analytics_overview(days=days, db=db, current_user=current_user)
     deep_dive = get_analytics_deep_dive(days=days, db=db, current_user=current_user)
 
-    if format.lower() == "json":
-        return {"overview": overview, "deep_dive": deep_dive}
+    if format_value == "json":
+        result = io.StringIO()
+        import json
 
-    if format.lower() != "csv":
+        json.dump({"overview": overview, "deep_dive": deep_dive}, result)
+        payload = result.getvalue()
+        _cache_set(cache_key, payload)
+        return Response(
+            content=payload,
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename=analytics-{days}d.json"},
+        )
+
+    if format_value != "csv":
         raise HTTPException(status_code=400, detail="format must be 'json' or 'csv'")
 
     output = io.StringIO()
@@ -465,7 +547,13 @@ def export_analytics_report(
     for key, value in deep_dive.get("queue_aging", {}).items():
         writer.writerow(["queue_aging", key, value])
 
-    return {"filename": f"analytics-{days}d.csv", "csv": output.getvalue()}
+    result = {"filename": f"analytics-{days}d.csv", "csv": output.getvalue()}
+    _cache_set(cache_key, result)
+    return Response(
+        content=result["csv"],
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={result['filename']}"},
+    )
 
 
 @router.get("/analytics/alerts")
@@ -475,6 +563,11 @@ def list_analytics_alerts(
     current_user: User = Depends(get_current_admin_user),
 ):
     """List alert rules and evaluate their current state."""
+    cache_key = _cache_key("analytics_alerts", days=days)
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     deep_dive = get_analytics_deep_dive(days=days, db=db, current_user=current_user)
     metrics = {
         "quality.fallback_response_rate": deep_dive.get("quality", {}).get("fallback_response_rate", 0),
@@ -503,7 +596,9 @@ def list_analytics_alerts(
             }
         )
 
-    return {"rules": result, "metrics": metrics}
+    payload = {"rules": result, "metrics": metrics}
+    _cache_set(cache_key, payload)
+    return payload
 
 
 @router.post("/analytics/alerts")
@@ -526,6 +621,7 @@ def create_analytics_alert(
     db.add(rule)
     db.commit()
     db.refresh(rule)
+    _invalidate_analytics_cache()
     return {"status": "success", "id": rule.id}
 
 
@@ -541,6 +637,7 @@ def delete_analytics_alert(
         raise HTTPException(status_code=404, detail="Rule not found")
     db.delete(rule)
     db.commit()
+    _invalidate_analytics_cache()
     return {"status": "success"}
 
 
@@ -578,23 +675,47 @@ def get_transcripts(
     search: str = Query(default=""),
     min_messages: int = Query(default=0, ge=0),
     include_discarded: bool = Query(default=False),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+    summary_only: bool = Query(default=False),
+    paged: bool = Query(default=False),
     limit: int = Query(default=200, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
 ):
-    """Fetch chat sessions and messages with optional filtering."""
+    """Fetch chat sessions/messages with optional filtering, pagination, and summary mode."""
     session_query = db.query(ChatSession)
     if include_discarded:
         session_query = session_query.filter(ChatSession.discarded_at.isnot(None))
     else:
         session_query = session_query.filter(ChatSession.discarded_at.is_(None))
 
-    sessions = session_query.order_by(desc(ChatSession.created_at)).limit(limit).all()
+    total_sessions = session_query.count()
+    if paged:
+        offset = (page - 1) * page_size
+        sessions = session_query.order_by(desc(ChatSession.created_at)).offset(offset).limit(page_size).all()
+    else:
+        sessions = session_query.order_by(desc(ChatSession.created_at)).limit(limit).all()
+
     needle = search.strip().lower()
     
+    session_ids = [session.id for session in sessions]
+    message_rows = (
+        db.query(Message)
+        .filter(Message.session_id.in_(session_ids))
+        .order_by(Message.timestamp)
+        .all()
+        if session_ids
+        else []
+    )
+
+    messages_by_session = defaultdict(list)
+    for message in message_rows:
+        messages_by_session[message.session_id].append(message)
+
     result = []
     for session in sessions:
-        messages = db.query(Message).filter(Message.session_id == session.id).order_by(Message.timestamp).all()
+        messages = messages_by_session.get(session.id, [])
         if not messages:
             continue
 
@@ -607,27 +728,41 @@ def get_transcripts(
             if needle not in session_text and needle not in str(session.id) and needle not in session_guest:
                 continue
 
-        result.append(
-            {
-                "session_id": session.id,
-                "guest_name": session.guest_name,
-                "created_at": session.created_at,
-                "discarded_at": session.discarded_at,
-                "discard_reason": session.discard_reason,
-                "message_count": len(messages),
-                "status": session.review_status,
-                "messages": [
-                    {
-                        "id": m.id,
-                        "role": m.role,
-                        "content": m.content,
-                        "timestamp": m.timestamp,
-                        "upvoted": m.upvoted,
-                    }
-                    for m in messages
-                ],
-            }
-        )
+        payload = {
+            "session_id": session.id,
+            "guest_name": session.guest_name,
+            "created_at": session.created_at,
+            "discarded_at": session.discarded_at,
+            "discard_reason": session.discard_reason,
+            "message_count": len(messages),
+            "status": session.review_status,
+        }
+
+        if summary_only:
+            payload["last_message_preview"] = messages[-1].content[:220] if messages else ""
+        else:
+            payload["messages"] = [
+                {
+                    "id": m.id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp,
+                    "upvoted": m.upvoted,
+                }
+                for m in messages
+            ]
+
+        result.append(payload)
+
+    if paged:
+        return {
+            "items": result,
+            "page": page,
+            "page_size": page_size,
+            "total": total_sessions,
+            "has_next": (page * page_size) < total_sessions,
+        }
+
     return result
 
 
@@ -635,6 +770,10 @@ def get_transcripts(
 def get_archived_transcripts(
     search: str = Query(default=""),
     min_messages: int = Query(default=0, ge=0),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+    summary_only: bool = Query(default=False),
+    paged: bool = Query(default=False),
     limit: int = Query(default=200, ge=1, le=1000),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user),
@@ -644,6 +783,10 @@ def get_archived_transcripts(
         search=search,
         min_messages=min_messages,
         include_discarded=True,
+        page=page,
+        page_size=page_size,
+        summary_only=summary_only,
+        paged=paged,
         limit=limit,
         db=db,
         current_user=current_user,
@@ -723,6 +866,8 @@ def upvote_message(message_id: int, db: Session = Depends(get_db), current_user:
         ids=[f"gold_{assistant_msg.id}"]
     )
 
+    _invalidate_analytics_cache()
+
     return {"status": "success", "message": "Saved to Gold Standard knowledge base"}
 
 
@@ -765,6 +910,7 @@ def add_session_to_database(
     session.discarded_at = datetime.now(timezone.utc)
     session.discard_reason = "Added to database"
     db.commit()
+    _invalidate_analytics_cache()
 
     return {
         "status": "success",
@@ -789,6 +935,7 @@ def discard_session(
     session.discarded_at = datetime.now(timezone.utc)
     session.discard_reason = payload.reason.strip()[:255] if payload.reason else None
     db.commit()
+    _invalidate_analytics_cache()
     return {"status": "success", "message": "Session discarded"}
 
 
@@ -807,4 +954,5 @@ def restore_session(
     session.discarded_at = None
     session.discard_reason = None
     db.commit()
+    _invalidate_analytics_cache()
     return {"status": "success", "message": "Session restored"}

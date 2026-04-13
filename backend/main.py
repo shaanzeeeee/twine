@@ -32,6 +32,11 @@ def ensure_runtime_schema():
         if "discard_reason" not in column_names:
             connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN discard_reason VARCHAR(255)"))
 
+        # Performance indexes for transcript and analytics queries.
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_chat_sessions_created_status ON chat_sessions(created_at, review_status)"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_messages_session_timestamp ON messages(session_id, timestamp)"))
+        connection.execute(text("CREATE INDEX IF NOT EXISTS ix_messages_session_role_timestamp ON messages(session_id, role, timestamp)"))
+
 
 ensure_runtime_schema()
 
