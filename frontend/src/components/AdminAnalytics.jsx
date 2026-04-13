@@ -26,6 +26,35 @@ const AdminAnalytics = () => {
     }
   };
 
+  const downloadReport = async (format) => {
+    try {
+      const response = await api.get('/admin/analytics/report', {
+        params: { days, format },
+      });
+
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `analytics-${days}d.json`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      const blob = new Blob([response.data.csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = response.data.filename || `analytics-${days}d.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download analytics report', error);
+    }
+  };
+
   useEffect(() => {
     fetchAnalytics();
   }, [days]);
@@ -77,6 +106,18 @@ const AdminAnalytics = () => {
           >
             Live {autoRefresh ? 'On' : 'Off'}
           </button>
+          <button
+            onClick={() => downloadReport('json')}
+            className="px-3 py-2 text-xs uppercase tracking-widest font-black border bg-zinc-900 text-zinc-200 border-white/10 hover:border-red-600"
+          >
+            Export JSON
+          </button>
+          <button
+            onClick={() => downloadReport('csv')}
+            className="px-3 py-2 text-xs uppercase tracking-widest font-black border bg-zinc-900 text-zinc-200 border-white/10 hover:border-red-600"
+          >
+            Export CSV
+          </button>
         </div>
       </div>
 
@@ -118,6 +159,39 @@ const AdminAnalytics = () => {
               <div key={key} className="flex items-center justify-between border border-white/5 bg-zinc-950/60 px-3 py-2">
                 <span className="text-[10px] uppercase tracking-widest font-black text-zinc-400">{key.replace('_', ' ')}</span>
                 <span className="text-sm font-bold text-white">{value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className={cardClass}>
+          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">RAG Quality Signals</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between border border-white/5 bg-zinc-950/60 px-3 py-2">
+              <span className="text-[10px] uppercase tracking-widest font-black text-zinc-400">Retrieval hit rate</span>
+              <span className="text-sm font-bold text-white">{deepDive?.rag_quality?.retrieval_hit_rate || 0}%</span>
+            </div>
+            <div className="flex items-center justify-between border border-white/5 bg-zinc-950/60 px-3 py-2">
+              <span className="text-[10px] uppercase tracking-widest font-black text-zinc-400">Low context rate</span>
+              <span className="text-sm font-bold text-white">{deepDive?.rag_quality?.low_context_rate || 0}%</span>
+            </div>
+            <div className="flex items-center justify-between border border-white/5 bg-zinc-950/60 px-3 py-2">
+              <span className="text-[10px] uppercase tracking-widest font-black text-zinc-400">Estimated grounded responses</span>
+              <span className="text-sm font-bold text-white">{deepDive?.rag_quality?.estimated_grounded_responses || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={cardClass}>
+          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Anomaly Detector</h4>
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
+            {(deepDive?.anomalies || []).length === 0 && <p className="text-xs text-zinc-500">No anomalies detected in current window.</p>}
+            {(deepDive?.anomalies || []).map((anomaly, idx) => (
+              <div key={`${anomaly.date}-${anomaly.type}-${idx}`} className="border border-amber-700/40 bg-amber-900/20 px-3 py-2">
+                <div className="text-[10px] uppercase tracking-widest font-black text-amber-200">{anomaly.type.replace('_', ' ')}</div>
+                <div className="text-xs text-zinc-300 mt-1">{anomaly.date} • value {anomaly.value} vs baseline {anomaly.baseline}</div>
               </div>
             ))}
           </div>

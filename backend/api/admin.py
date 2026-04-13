@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from pydantic import BaseModel
 from collections import defaultdict
 import re
+import csv
+import io
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message, User
 from backend.api.deps import get_current_admin_user
@@ -31,6 +33,29 @@ def _extract_terms(text: str) -> List[str]:
     return [token for token in tokens if token not in STOPWORDS]
 
 
+def _collect_window_data(db: Session, days: int):
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.created_at >= start_time)
+        .order_by(ChatSession.created_at)
+        .all()
+    )
+    session_ids = [session.id for session in sessions]
+    messages = (
+        db.query(Message)
+        .filter(Message.session_id.in_(session_ids))
+        .order_by(Message.timestamp)
+        .all()
+        if session_ids
+        else []
+    )
+    return now, start_time, sessions, messages
+
+
 @router.get("/analytics/overview")
 def get_analytics_overview(
     days: int = Query(default=30, ge=1, le=365),
@@ -38,28 +63,12 @@ def get_analytics_overview(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Return aggregated admin analytics for sessions and messages."""
-    now = datetime.now(timezone.utc)
-    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
     from datetime import timedelta
-
-    start_time = start_time - timedelta(days=days - 1)
-
-    sessions = (
-        db.query(ChatSession)
-        .filter(ChatSession.created_at >= start_time)
-        .order_by(ChatSession.created_at)
-        .all()
-    )
+    now, start_time, sessions, messages = _collect_window_data(db, days)
 
     total_sessions = len(sessions)
     active_sessions = len([s for s in sessions if s.discarded_at is None])
     archived_sessions = total_sessions - active_sessions
-
-    session_ids = [session.id for session in sessions]
-    if session_ids:
-        messages = db.query(Message).filter(Message.session_id.in_(session_ids)).all()
-    else:
-        messages = []
 
     total_messages = len(messages)
     assistant_messages = len([m for m in messages if m.role == "assistant"])
@@ -151,26 +160,7 @@ def get_analytics_deep_dive(
     current_user: User = Depends(get_current_admin_user),
 ):
     """Return deeper analysis: topic clusters, quality heuristics, and operations metrics."""
-    from datetime import timedelta
-
-    now = datetime.now(timezone.utc)
-    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
-
-    sessions = (
-        db.query(ChatSession)
-        .filter(ChatSession.created_at >= start_time)
-        .order_by(ChatSession.created_at)
-        .all()
-    )
-    session_ids = [session.id for session in sessions]
-    messages = (
-        db.query(Message)
-        .filter(Message.session_id.in_(session_ids))
-        .order_by(Message.timestamp)
-        .all()
-        if session_ids
-        else []
-    )
+    now, _start_time, sessions, messages = _collect_window_data(db, days)
 
     # Topic and intent extraction from user messages
     user_messages = [msg for msg in messages if msg.role == "user"]
@@ -228,8 +218,60 @@ def get_analytics_deep_dive(
         "fallback_response_rate": round((fallback_count / assistant_count) * 100, 2) if assistant_count else 0,
     }
 
-    # Session outcome by top topics (approximation)
+    # RAG quality approximation using response heuristics
+    contextual_signals = len(
+        [
+            msg
+            for msg in assistant_messages
+            if any(
+                keyword in (msg.content or "").lower()
+                for keyword in ["based on", "from the", "knowledge base", "context", "according to"]
+            )
+        ]
+    )
+    low_context_signals = len(
+        [
+            msg
+            for msg in assistant_messages
+            if any(
+                keyword in (msg.content or "").lower()
+                for keyword in ["not enough context", "i don't have", "i do not have", "cannot find", "no information"]
+            )
+        ]
+    )
+
+    rag_quality = {
+        "retrieval_hit_rate": round((contextual_signals / assistant_count) * 100, 2) if assistant_count else 0,
+        "low_context_rate": round((low_context_signals / assistant_count) * 100, 2) if assistant_count else 0,
+        "estimated_grounded_responses": contextual_signals,
+    }
+
+    # Anomaly detection against daily baseline
+    daily_sessions = defaultdict(int)
+    daily_fallbacks = defaultdict(int)
+    for session in sessions:
+        day_key = session.created_at.date().isoformat()
+        daily_sessions[day_key] += 1
     session_by_id = {session.id: session for session in sessions}
+    for msg in assistant_messages:
+        day_key = (msg.timestamp or now).date().isoformat()
+        if "error" in (msg.content or "").lower() or "can’t help" in (msg.content or "").lower():
+            daily_fallbacks[day_key] += 1
+
+    session_values = list(daily_sessions.values())
+    fallback_values = list(daily_fallbacks.values())
+    avg_sessions = (sum(session_values) / len(session_values)) if session_values else 0
+    avg_fallbacks = (sum(fallback_values) / len(fallback_values)) if fallback_values else 0
+
+    anomalies = []
+    for day_key, value in daily_sessions.items():
+        if avg_sessions and value > avg_sessions * 1.75:
+            anomalies.append({"date": day_key, "type": "traffic_spike", "value": value, "baseline": round(avg_sessions, 2)})
+    for day_key, value in daily_fallbacks.items():
+        if avg_fallbacks and value > avg_fallbacks * 2:
+            anomalies.append({"date": day_key, "type": "fallback_spike", "value": value, "baseline": round(avg_fallbacks, 2)})
+
+    # Session outcome by top topics (approximation)
     topic_outcomes = defaultdict(lambda: {"approved": 0, "pending_review": 0, "discarded": 0})
     for msg in user_messages:
         terms = _extract_terms(msg.content)
@@ -251,10 +293,48 @@ def get_analytics_deep_dive(
         "window_days": days,
         "top_topics": top_topics,
         "quality": quality,
+        "rag_quality": rag_quality,
+        "anomalies": anomalies,
         "queue_aging": queue_aging,
         "operations": operations,
         "topic_outcomes": topic_outcome_rows,
     }
+
+
+@router.get("/analytics/report")
+def export_analytics_report(
+    days: int = Query(default=30, ge=1, le=365),
+    format: str = Query(default="json"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Export analytics report as JSON or CSV."""
+    overview = get_analytics_overview(days=days, db=db, current_user=current_user)
+    deep_dive = get_analytics_deep_dive(days=days, db=db, current_user=current_user)
+
+    if format.lower() == "json":
+        return {"overview": overview, "deep_dive": deep_dive}
+
+    if format.lower() != "csv":
+        raise HTTPException(status_code=400, detail="format must be 'json' or 'csv'")
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["section", "metric", "value"])
+
+    for key, value in overview.get("kpis", {}).items():
+        writer.writerow(["kpi", key, value])
+
+    for key, value in deep_dive.get("quality", {}).items():
+        writer.writerow(["quality", key, value])
+    for key, value in deep_dive.get("rag_quality", {}).items():
+        writer.writerow(["rag_quality", key, value])
+    for key, value in deep_dive.get("operations", {}).items():
+        writer.writerow(["operations", key, value])
+    for key, value in deep_dive.get("queue_aging", {}).items():
+        writer.writerow(["queue_aging", key, value])
+
+    return {"filename": f"analytics-{days}d.csv", "csv": output.getvalue()}
 
 
 def _build_qa_documents(messages: List[Message], session_id: int):
