@@ -5,6 +5,7 @@ from typing import List
 from datetime import datetime, timezone
 from pydantic import BaseModel
 from collections import defaultdict
+import re
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message, User
 from backend.api.deps import get_current_admin_user
@@ -15,6 +16,19 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class DiscardSessionRequest(BaseModel):
     reason: str = ""
+
+
+STOPWORDS = {
+    "the", "a", "an", "and", "or", "to", "of", "in", "on", "for", "is", "are", "was", "were",
+    "be", "with", "this", "that", "it", "as", "at", "from", "by", "about", "can", "could", "should",
+    "would", "how", "what", "why", "when", "where", "who", "i", "you", "we", "they", "he", "she",
+    "my", "your", "our", "their", "me", "us", "them", "do", "does", "did", "please",
+}
+
+
+def _extract_terms(text: str) -> List[str]:
+    tokens = re.findall(r"[a-zA-Z]{3,}", (text or "").lower())
+    return [token for token in tokens if token not in STOPWORDS]
 
 
 @router.get("/analytics/overview")
@@ -127,6 +141,119 @@ def get_analytics_overview(
         "depth_distribution": depth_buckets,
         "top_guests": top_guests,
         "daily_trends": trend_days,
+    }
+
+
+@router.get("/analytics/deep-dive")
+def get_analytics_deep_dive(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Return deeper analysis: topic clusters, quality heuristics, and operations metrics."""
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
+
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.created_at >= start_time)
+        .order_by(ChatSession.created_at)
+        .all()
+    )
+    session_ids = [session.id for session in sessions]
+    messages = (
+        db.query(Message)
+        .filter(Message.session_id.in_(session_ids))
+        .order_by(Message.timestamp)
+        .all()
+        if session_ids
+        else []
+    )
+
+    # Topic and intent extraction from user messages
+    user_messages = [msg for msg in messages if msg.role == "user"]
+    term_counts = defaultdict(int)
+    for msg in user_messages:
+        for term in _extract_terms(msg.content):
+            term_counts[term] += 1
+
+    top_topics = sorted(
+        [{"topic": term, "count": count} for term, count in term_counts.items()],
+        key=lambda item: item["count"],
+        reverse=True,
+    )[:15]
+
+    # Simple quality heuristics for assistant responses
+    assistant_messages = [msg for msg in messages if msg.role == "assistant"]
+    assistant_count = len(assistant_messages)
+    short_answer_count = len([msg for msg in assistant_messages if len((msg.content or "").strip()) < 80])
+    fallback_count = len(
+        [
+            msg
+            for msg in assistant_messages
+            if "error" in (msg.content or "").lower()
+            or "can’t help" in (msg.content or "").lower()
+            or "cannot" in (msg.content or "").lower()
+        ]
+    )
+
+    # Queue aging for active review sessions
+    pending_sessions = [s for s in sessions if (s.review_status or "pending_review") == "pending_review" and s.discarded_at is None]
+    pending_ages = [max((now - (s.created_at or now)).days, 0) for s in pending_sessions]
+
+    queue_aging = {
+        "pending_count": len(pending_sessions),
+        "oldest_pending_days": max(pending_ages) if pending_ages else 0,
+        "avg_pending_days": round(sum(pending_ages) / len(pending_ages), 2) if pending_ages else 0,
+    }
+
+    # Operational throughput from statuses
+    approved_count = len([s for s in sessions if (s.review_status or "") == "approved"])
+    discarded_count = len([s for s in sessions if (s.review_status or "") == "discarded"])
+    restored_estimate = len([s for s in sessions if (s.review_status or "") == "pending_review" and s.discard_reason is None and s.discarded_at is None])
+
+    operations = {
+        "approved_sessions": approved_count,
+        "discarded_sessions": discarded_count,
+        "restored_or_reopened_sessions": restored_estimate,
+        "approval_rate": round((approved_count / len(sessions)) * 100, 2) if sessions else 0,
+        "discard_rate": round((discarded_count / len(sessions)) * 100, 2) if sessions else 0,
+    }
+
+    quality = {
+        "assistant_messages": assistant_count,
+        "short_response_rate": round((short_answer_count / assistant_count) * 100, 2) if assistant_count else 0,
+        "fallback_response_rate": round((fallback_count / assistant_count) * 100, 2) if assistant_count else 0,
+    }
+
+    # Session outcome by top topics (approximation)
+    session_by_id = {session.id: session for session in sessions}
+    topic_outcomes = defaultdict(lambda: {"approved": 0, "pending_review": 0, "discarded": 0})
+    for msg in user_messages:
+        terms = _extract_terms(msg.content)
+        if not terms:
+            continue
+        dominant = terms[0]
+        status = (session_by_id.get(msg.session_id).review_status if session_by_id.get(msg.session_id) else "pending_review") or "pending_review"
+        if status not in {"approved", "pending_review", "discarded"}:
+            status = "pending_review"
+        topic_outcomes[dominant][status] += 1
+
+    topic_outcome_rows = [
+        {"topic": topic, **counts}
+        for topic, counts in topic_outcomes.items()
+    ]
+    topic_outcome_rows = sorted(topic_outcome_rows, key=lambda row: (row["approved"] + row["pending_review"] + row["discarded"]), reverse=True)[:12]
+
+    return {
+        "window_days": days,
+        "top_topics": top_topics,
+        "quality": quality,
+        "queue_aging": queue_aging,
+        "operations": operations,
+        "topic_outcomes": topic_outcome_rows,
     }
 
 
