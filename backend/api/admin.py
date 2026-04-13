@@ -9,7 +9,7 @@ import re
 import csv
 import io
 from backend.core.database import get_db
-from backend.models.sql_models import ChatSession, Message, User
+from backend.models.sql_models import ChatSession, Message, User, AnalyticsAlertRule
 from backend.api.deps import get_current_admin_user
 from backend.services.chroma_service import chroma_service
 
@@ -18,6 +18,14 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class DiscardSessionRequest(BaseModel):
     reason: str = ""
+
+
+class AnalyticsAlertRuleCreate(BaseModel):
+    name: str
+    metric_key: str
+    threshold: int
+    comparator: str = ">="
+    enabled: bool = True
 
 
 STOPWORDS = {
@@ -31,6 +39,18 @@ STOPWORDS = {
 def _extract_terms(text: str) -> List[str]:
     tokens = re.findall(r"[a-zA-Z]{3,}", (text or "").lower())
     return [token for token in tokens if token not in STOPWORDS]
+
+
+def _compare_metric(value: float, comparator: str, threshold: float) -> bool:
+    if comparator == ">":
+        return value > threshold
+    if comparator == "<":
+        return value < threshold
+    if comparator == "<=":
+        return value <= threshold
+    if comparator == "==":
+        return value == threshold
+    return value >= threshold
 
 
 def _collect_window_data(db: Session, days: int):
@@ -54,6 +74,26 @@ def _collect_window_data(db: Session, days: int):
         else []
     )
     return now, start_time, sessions, messages
+
+
+def _collect_data_between(db: Session, start_time: datetime, end_time: datetime):
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.created_at >= start_time)
+        .filter(ChatSession.created_at < end_time)
+        .order_by(ChatSession.created_at)
+        .all()
+    )
+    session_ids = [session.id for session in sessions]
+    messages = (
+        db.query(Message)
+        .filter(Message.session_id.in_(session_ids))
+        .order_by(Message.timestamp)
+        .all()
+        if session_ids
+        else []
+    )
+    return sessions, messages
 
 
 @router.get("/analytics/overview")
@@ -301,6 +341,97 @@ def get_analytics_deep_dive(
     }
 
 
+@router.get("/analytics/topic-trends")
+def get_topic_trends(
+    days: int = Query(default=30, ge=7, le=365),
+    top_n: int = Query(default=5, ge=1, le=20),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Return daily trend lines for top topic terms."""
+    now, start_time, _sessions, messages = _collect_window_data(db, days)
+
+    daily_topic_counts = defaultdict(lambda: defaultdict(int))
+    total_topic_counts = defaultdict(int)
+    for msg in messages:
+        if msg.role != "user":
+            continue
+        terms = _extract_terms(msg.content)
+        if not terms:
+            continue
+        topic = terms[0]
+        day_key = (msg.timestamp or now).date().isoformat()
+        daily_topic_counts[day_key][topic] += 1
+        total_topic_counts[topic] += 1
+
+    top_topics = [topic for topic, _count in sorted(total_topic_counts.items(), key=lambda item: item[1], reverse=True)[:top_n]]
+
+    from datetime import timedelta
+
+    rows = []
+    cursor = start_time.date()
+    while cursor <= now.date():
+        day_key = cursor.isoformat()
+        row = {"date": day_key}
+        for topic in top_topics:
+            row[topic] = daily_topic_counts[day_key].get(topic, 0)
+        rows.append(row)
+        cursor = cursor + timedelta(days=1)
+
+    return {"window_days": days, "topics": top_topics, "series": rows}
+
+
+@router.get("/analytics/regression")
+def get_regression_monitor(
+    days: int = Query(default=14, ge=7, le=90),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Compare current window against previous equal-length window."""
+    from datetime import timedelta
+
+    now = datetime.now(timezone.utc)
+    current_start = now - timedelta(days=days)
+    previous_start = current_start - timedelta(days=days)
+
+    current_sessions, current_messages = _collect_data_between(db, current_start, now)
+    previous_sessions, previous_messages = _collect_data_between(db, previous_start, current_start)
+
+    def _kpis(sessions, messages):
+        assistant = [m for m in messages if m.role == "assistant"]
+        fallback = [m for m in assistant if "error" in (m.content or "").lower() or "can’t help" in (m.content or "").lower()]
+        return {
+            "sessions": len(sessions),
+            "messages": len(messages),
+            "avg_messages_per_session": round((len(messages) / len(sessions)), 2) if sessions else 0,
+            "fallback_rate": round((len(fallback) / len(assistant)) * 100, 2) if assistant else 0,
+        }
+
+    current = _kpis(current_sessions, current_messages)
+    previous = _kpis(previous_sessions, previous_messages)
+
+    def _delta(cur, prev):
+        absolute = cur - prev
+        percent = round((absolute / prev) * 100, 2) if prev else 0
+        return {"current": cur, "previous": prev, "absolute": absolute, "percent": percent}
+
+    deltas = {key: _delta(current[key], previous[key]) for key in current.keys()}
+
+    regressions = []
+    if deltas["fallback_rate"]["absolute"] > 5:
+        regressions.append("Fallback rate increased significantly")
+    if deltas["avg_messages_per_session"]["absolute"] < -1:
+        regressions.append("Conversation depth dropped")
+    if deltas["sessions"]["absolute"] < 0 and deltas["sessions"]["percent"] < -20:
+        regressions.append("Session volume dropped more than 20%")
+
+    return {
+        "window_days": days,
+        "deltas": deltas,
+        "regressions": regressions,
+    }
+
+
 @router.get("/analytics/report")
 def export_analytics_report(
     days: int = Query(default=30, ge=1, le=365),
@@ -335,6 +466,82 @@ def export_analytics_report(
         writer.writerow(["queue_aging", key, value])
 
     return {"filename": f"analytics-{days}d.csv", "csv": output.getvalue()}
+
+
+@router.get("/analytics/alerts")
+def list_analytics_alerts(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """List alert rules and evaluate their current state."""
+    deep_dive = get_analytics_deep_dive(days=days, db=db, current_user=current_user)
+    metrics = {
+        "quality.fallback_response_rate": deep_dive.get("quality", {}).get("fallback_response_rate", 0),
+        "quality.short_response_rate": deep_dive.get("quality", {}).get("short_response_rate", 0),
+        "rag.low_context_rate": deep_dive.get("rag_quality", {}).get("low_context_rate", 0),
+        "queue.pending_count": deep_dive.get("queue_aging", {}).get("pending_count", 0),
+        "queue.oldest_pending_days": deep_dive.get("queue_aging", {}).get("oldest_pending_days", 0),
+    }
+
+    rules = db.query(AnalyticsAlertRule).order_by(desc(AnalyticsAlertRule.created_at)).all()
+    result = []
+    for rule in rules:
+        current_value = metrics.get(rule.metric_key, 0)
+        triggered = _compare_metric(current_value, rule.comparator, rule.threshold) if rule.enabled else False
+        result.append(
+            {
+                "id": rule.id,
+                "name": rule.name,
+                "metric_key": rule.metric_key,
+                "threshold": rule.threshold,
+                "comparator": rule.comparator,
+                "enabled": rule.enabled,
+                "current_value": current_value,
+                "triggered": triggered,
+                "created_at": rule.created_at,
+            }
+        )
+
+    return {"rules": result, "metrics": metrics}
+
+
+@router.post("/analytics/alerts")
+def create_analytics_alert(
+    payload: AnalyticsAlertRuleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Create a new analytics alert rule."""
+    if payload.comparator not in {">", ">=", "<", "<=", "=="}:
+        raise HTTPException(status_code=400, detail="Invalid comparator")
+
+    rule = AnalyticsAlertRule(
+        name=payload.name.strip()[:120],
+        metric_key=payload.metric_key.strip()[:120],
+        threshold=payload.threshold,
+        comparator=payload.comparator,
+        enabled=payload.enabled,
+    )
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+    return {"status": "success", "id": rule.id}
+
+
+@router.delete("/analytics/alerts/{rule_id}")
+def delete_analytics_alert(
+    rule_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Delete an analytics alert rule."""
+    rule = db.query(AnalyticsAlertRule).filter(AnalyticsAlertRule.id == rule_id).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Rule not found")
+    db.delete(rule)
+    db.commit()
+    return {"status": "success"}
 
 
 def _build_qa_documents(messages: List[Message], session_id: int):

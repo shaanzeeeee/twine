@@ -49,3 +49,15 @@ class KnowledgeMetadata(Base):
     source_url = Column(String(1024))
     file_type = Column(String(50))
     processed_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class AnalyticsAlertRule(Base):
+    __tablename__ = "analytics_alert_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(120), nullable=False)
+    metric_key = Column(String(120), nullable=False, index=True)
+    threshold = Column(Integer, nullable=False)
+    comparator = Column(String(10), nullable=False, default=">=")
+    enabled = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
