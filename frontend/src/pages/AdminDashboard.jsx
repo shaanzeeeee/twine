@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, lazy, Suspense } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
-import AdminAnalytics from '../components/AdminAnalytics';
 import {
     MessageSquare,
     ArrowLeft,
@@ -14,6 +13,8 @@ import {
     Download,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const AdminAnalytics = lazy(() => import('../components/AdminAnalytics'));
 
 const AdminDashboard = () => {
     const [sessions, setSessions] = useState([]);
@@ -299,7 +300,17 @@ const AdminDashboard = () => {
                  <div className="absolute inset-0 opacity-5 bg-[url('/gym-bg.png')] bg-cover bg-center grayscale" />
                 
                 {viewMode === 'analytics' ? (
-                    <AdminAnalytics />
+                    <Suspense
+                        fallback={
+                            <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                                {Array.from({ length: 8 }).map((_, idx) => (
+                                    <div key={idx} className="h-24 bg-zinc-900/60 border border-white/10 animate-pulse" />
+                                ))}
+                            </div>
+                        }
+                    >
+                        <AdminAnalytics />
+                    </Suspense>
                 ) : selectedSession ? (
                     <>
                         <div className="relative z-10 h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex items-center px-8 justify-between shrink-0">
