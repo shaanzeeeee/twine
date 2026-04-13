@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
     
     # OpenAI
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    CHROMA_OPENAI_API_KEY: str = os.getenv("CHROMA_OPENAI_API_KEY", "")
     
     # Security Context
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-for-development-change-in-prod")
@@ -24,6 +26,7 @@ class Settings(BaseSettings):
     TOKEN_FILE: str = os.getenv("TOKEN_FILE", "token.json")
 
     class Config:
-        env_file = ".env"
+        env_file = str(Path(__file__).resolve().parents[1] / ".env")
+        env_file_encoding = "utf-8"
 
 settings = Settings()

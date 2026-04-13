@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy import inspect, text
 
 from backend.core.config import settings
 from backend.models.sql_models import Base
@@ -12,6 +13,23 @@ from backend.core.database import engine
 
 # Database setup
 Base.metadata.create_all(bind=engine)
+
+
+def ensure_runtime_schema():
+    """Apply minimal additive schema updates for local/dev environments."""
+    inspector = inspect(engine)
+    if "chat_sessions" not in inspector.get_table_names():
+        return
+
+    column_names = {column["name"] for column in inspector.get_columns("chat_sessions")}
+    if "guest_name" in column_names:
+        return
+
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE chat_sessions ADD COLUMN guest_name VARCHAR(100)"))
+
+
+ensure_runtime_schema()
 
 scheduler = BackgroundScheduler()
 

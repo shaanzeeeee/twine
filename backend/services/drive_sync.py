@@ -13,6 +13,8 @@ from backend.core.config import settings
 from backend.services.chroma_service import chroma_service
 
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
+PDF_TEXT_FALLBACK_MIN_CHARS = 100
+GOOGLE_DRIVE_FOLDER_MIME = 'application/vnd.google-apps.folder'
 
 def get_drive_service():
     creds = None
@@ -25,19 +27,64 @@ def get_drive_service():
             raise Exception("Google Drive Credentials not valid. Run scripts/setup_drive.py first.")
     return build('drive', 'v3', credentials=creds)
 
+def list_drive_files_recursive(service, root_folder_id):
+    files = []
+    folders_to_visit = [root_folder_id]
+
+    while folders_to_visit:
+        folder_id = folders_to_visit.pop()
+        query = f"'{folder_id}' in parents and trashed = false"
+        page_token = None
+
+        while True:
+            results = service.files().list(
+                q=query,
+                fields="nextPageToken, files(id, name, mimeType, webViewLink)",
+                pageToken=page_token,
+            ).execute()
+
+            for item in results.get('files', []):
+                if item['mimeType'] == GOOGLE_DRIVE_FOLDER_MIME:
+                    folders_to_visit.append(item['id'])
+                else:
+                    files.append(item)
+
+            page_token = results.get('nextPageToken')
+            if not page_token:
+                break
+
+    return files
+
 def extract_text_from_pdf(file_bytes):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+    openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    page_texts = []
+
+    for page_num, page in enumerate(doc, start=1):
+        extracted_text = page.get_text("text").strip()
+
+        # OCR fallback for scanned/image-heavy PDF pages with little selectable text.
+        if len(extracted_text) < PDF_TEXT_FALLBACK_MIN_CHARS:
+            try:
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                image_bytes = pix.tobytes("png")
+                ocr_text = extract_text_from_image(image_bytes, "image/png", client=openai_client)
+                if ocr_text and ocr_text.strip():
+                    extracted_text = f"{extracted_text}\n\n[OCR page {page_num}]\n{ocr_text}".strip()
+            except Exception as ocr_err:
+                print(f"OCR fallback failed on page {page_num}: {ocr_err}")
+
+        if extracted_text:
+            page_texts.append(f"[Page {page_num}]\n{extracted_text}")
+
+    return "\n\n".join(page_texts)
 
 def extract_text_from_docx(file_bytes):
     doc = docx.Document(io.BytesIO(file_bytes))
     return "\n".join([para.text for para in doc.paragraphs])
 
-def extract_text_from_image(file_bytes, mime_type):
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+def extract_text_from_image(file_bytes, mime_type, client=None):
+    client = client or OpenAI(api_key=settings.OPENAI_API_KEY)
     base64_image = base64.b64encode(file_bytes).decode('utf-8')
     
     response = client.chat.completions.create(
@@ -78,9 +125,7 @@ def sync_drive_to_chroma():
             print("No DRIVE_FOLDER_ID set. Skipping sync.")
             return
 
-        query = f"'{folder_id}' in parents and trashed = false"
-        results = service.files().list(q=query, fields="nextPageToken, files(id, name, mimeType, webViewLink)").execute()
-        items = results.get('files', [])
+        items = list_drive_files_recursive(service, folder_id)
 
         for item in items:
             file_id = item['id']

@@ -16,6 +16,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[int] = None
+    guest_name: Optional[str] = None
     history: List[ChatMessage] = []
 
 class ChatResponse(BaseModel):
@@ -27,6 +28,8 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     try:
         # Resolve or create ChatSession
         session_id = request.session_id
+        sanitized_guest_name = (request.guest_name or "").strip()
+        sanitized_guest_name = sanitized_guest_name[:100] if sanitized_guest_name else None
         if not session_id:
             # Create a guest user to satisfy the DB constraint
             from backend.models.sql_models import User
@@ -37,7 +40,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                 db.commit()
                 db.refresh(guest_user)
                 
-            chat_session = ChatSession(user_id=guest_user.id)
+            chat_session = ChatSession(user_id=guest_user.id, guest_name=sanitized_guest_name)
             db.add(chat_session)
             db.commit()
             db.refresh(chat_session)
@@ -46,6 +49,9 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             chat_session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
             if not chat_session:
                 raise HTTPException(status_code=404, detail="Session not found")
+            if sanitized_guest_name and not chat_session.guest_name:
+                chat_session.guest_name = sanitized_guest_name
+                db.commit()
 
         # Save User Message to DB
         user_msg = Message(session_id=session_id, role="user", content=request.message)
