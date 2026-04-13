@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
+import AdminAnalytics from '../components/AdminAnalytics';
 import {
     MessageSquare,
     ArrowLeft,
@@ -17,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 const AdminDashboard = () => {
     const [sessions, setSessions] = useState([]);
     const [selectedSession, setSelectedSession] = useState(null);
+    const [viewMode, setViewMode] = useState('transcripts');
     const [loading, setLoading] = useState(true);
     const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
     const [search, setSearch] = useState('');
@@ -203,6 +205,20 @@ const AdminDashboard = () => {
                     </button>
                 </div>
                 <div className="p-4 border-b border-white/5 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            onClick={() => setViewMode('transcripts')}
+                            className={`px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${viewMode === 'transcripts' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
+                        >
+                            Transcripts
+                        </button>
+                        <button
+                            onClick={() => setViewMode('analytics')}
+                            className={`px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${viewMode === 'analytics' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
+                        >
+                            Analytics
+                        </button>
+                    </div>
                     <button
                         onClick={() => setShowArchived((prev) => !prev)}
                         className={`w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${showArchived ? 'bg-amber-900/30 text-amber-200 border-amber-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
@@ -215,11 +231,13 @@ const AdminDashboard = () => {
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search session id or content"
                         className="w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"
+                        disabled={viewMode !== 'transcripts'}
                     />
                     <select
                         value={minMessages}
                         onChange={(e) => setMinMessages(Number(e.target.value))}
                         className="w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"
+                        disabled={viewMode !== 'transcripts'}
                     >
                         <option value={0}>All sessions</option>
                         <option value={4}>4+ messages</option>
@@ -228,6 +246,11 @@ const AdminDashboard = () => {
                     </select>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {viewMode === 'analytics' && (
+                        <div className="p-4 text-center text-[10px] uppercase tracking-widest font-black text-zinc-500 border border-white/5 bg-zinc-950/50">
+                            Analytics mode active
+                        </div>
+                    )}
                     {sessions.map((session) => (
                         <button
                             key={session.session_id}
@@ -239,7 +262,7 @@ const AdminDashboard = () => {
                                 selectedSession?.session_id === session.session_id
                                 ? 'bg-zinc-800 shadow-xl scale-[1.02] border-l-4 border-red-600 skew-x-[-2deg]'
                                 : 'hover:bg-zinc-900/50 grayscale hover:grayscale-0'
-                            }`}
+                            } ${viewMode !== 'transcripts' ? 'opacity-40 pointer-events-none' : ''}`}
                         >
                             <div className="flex justify-between items-start relative z-10">
                                 <span className={`text-[10px] font-black uppercase tracking-tighter ${
@@ -275,7 +298,9 @@ const AdminDashboard = () => {
             <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] relative">
                  <div className="absolute inset-0 opacity-5 bg-[url('/gym-bg.png')] bg-cover bg-center grayscale" />
                 
-                {selectedSession ? (
+                {viewMode === 'analytics' ? (
+                    <AdminAnalytics />
+                ) : selectedSession ? (
                     <>
                         <div className="relative z-10 h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex items-center px-8 justify-between shrink-0">
                             <div>

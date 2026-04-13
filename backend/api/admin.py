@@ -4,6 +4,7 @@ from sqlalchemy import desc
 from typing import List
 from datetime import datetime, timezone
 from pydantic import BaseModel
+from collections import defaultdict
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message, User
 from backend.api.deps import get_current_admin_user
@@ -14,6 +15,119 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class DiscardSessionRequest(BaseModel):
     reason: str = ""
+
+
+@router.get("/analytics/overview")
+def get_analytics_overview(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+):
+    """Return aggregated admin analytics for sessions and messages."""
+    now = datetime.now(timezone.utc)
+    start_time = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    from datetime import timedelta
+
+    start_time = start_time - timedelta(days=days - 1)
+
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.created_at >= start_time)
+        .order_by(ChatSession.created_at)
+        .all()
+    )
+
+    total_sessions = len(sessions)
+    active_sessions = len([s for s in sessions if s.discarded_at is None])
+    archived_sessions = total_sessions - active_sessions
+
+    session_ids = [session.id for session in sessions]
+    if session_ids:
+        messages = db.query(Message).filter(Message.session_id.in_(session_ids)).all()
+    else:
+        messages = []
+
+    total_messages = len(messages)
+    assistant_messages = len([m for m in messages if m.role == "assistant"])
+    user_messages = len([m for m in messages if m.role == "user"])
+
+    avg_messages_per_session = round(total_messages / total_sessions, 2) if total_sessions else 0
+
+    status_counts = defaultdict(int)
+    for session in sessions:
+        status_counts[session.review_status or "pending_review"] += 1
+
+    daily_sessions = defaultdict(int)
+    daily_messages = defaultdict(int)
+    for session in sessions:
+        day_key = session.created_at.date().isoformat()
+        daily_sessions[day_key] += 1
+
+    for msg in messages:
+        day_key = msg.timestamp.date().isoformat() if msg.timestamp else now.date().isoformat()
+        daily_messages[day_key] += 1
+
+    depth_buckets = {
+        "1-2": 0,
+        "3-5": 0,
+        "6-10": 0,
+        "11+": 0,
+    }
+
+    session_message_counts = defaultdict(int)
+    for msg in messages:
+        session_message_counts[msg.session_id] += 1
+
+    for count in session_message_counts.values():
+        if count <= 2:
+            depth_buckets["1-2"] += 1
+        elif count <= 5:
+            depth_buckets["3-5"] += 1
+        elif count <= 10:
+            depth_buckets["6-10"] += 1
+        else:
+            depth_buckets["11+"] += 1
+
+    guest_counts = defaultdict(int)
+    for session in sessions:
+        if session.guest_name:
+            guest_counts[session.guest_name] += 1
+
+    top_guests = sorted(
+        [{"guest_name": name, "sessions": count} for name, count in guest_counts.items()],
+        key=lambda item: item["sessions"],
+        reverse=True,
+    )[:10]
+
+    trend_days = []
+    cursor = start_time.date()
+    while cursor <= now.date():
+        day_key = cursor.isoformat()
+        trend_days.append(
+            {
+                "date": day_key,
+                "sessions": daily_sessions.get(day_key, 0),
+                "messages": daily_messages.get(day_key, 0),
+            }
+        )
+        cursor = cursor + timedelta(days=1)
+
+    return {
+        "window_days": days,
+        "kpis": {
+            "total_sessions": total_sessions,
+            "active_sessions": active_sessions,
+            "archived_sessions": archived_sessions,
+            "total_messages": total_messages,
+            "user_messages": user_messages,
+            "assistant_messages": assistant_messages,
+            "avg_messages_per_session": avg_messages_per_session,
+        },
+        "status_distribution": dict(status_counts),
+        "depth_distribution": depth_buckets,
+        "top_guests": top_guests,
+        "daily_trends": trend_days,
+    }
 
 
 def _build_qa_documents(messages: List[Message], session_id: int):
