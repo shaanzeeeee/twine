@@ -44,7 +44,7 @@ class ChatService:
         # Step 3: LLM Generation
         messages = [
             {"role": "system", "content": LUKA_SYSTEM_PROMPT},
-            {"role": "system", "content": f"Context Knowledge Base:\n{context_str}"}
+            {"role": "system", "content": f"Context Knowledge Base:\n{context_str}\n\nINSTRUCTION: Base your answer on the above context, but adapt the tone and reasoning to match the KingsBox founder persona. Be direct, authoritative, and commercially aware."}
         ]
         
         # Add conversation history
@@ -56,7 +56,7 @@ class ChatService:
         response = self.client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
-            temperature=0.7
+            temperature=0.4
         )
         
         return response.choices[0].message.content

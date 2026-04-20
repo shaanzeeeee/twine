@@ -18,17 +18,17 @@ import {
 } from 'recharts';
 import api from '../services/api';
 
-const panelClass = 'rounded-xl border border-white/10 bg-zinc-950/75 p-4 shadow-[0_0_40px_rgba(0,0,0,0.35)]';
+const panelClass = 'rounded-2xl sm:rounded-3xl border border-white/10 bg-[#111111]/90 p-4 sm:p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)]';
 const chartColors = ['#e11d48', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#14b8a6'];
 
 const StatCard = ({ label, value, tone = 'text-white' }) => (
-  <div className="rounded-lg border border-white/10 bg-black/40 p-4">
+  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
     <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
     <p className={`mt-2 text-2xl font-black ${tone}`}>{value}</p>
   </div>
 );
 
-const AdminAnalytics = () => {
+const AdminAnalytics = ({ refreshToken = 0, syncStatus = 'idle', syncMessage = '' }) => {
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -88,7 +88,7 @@ const AdminAnalytics = () => {
 
   useEffect(() => {
     fetchAnalytics({ silent: false });
-  }, [days]);
+  }, [days, refreshToken]);
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
@@ -184,8 +184,13 @@ const AdminAnalytics = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(225,29,72,0.18),transparent_42%),radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_38%)]">
-      <div className="flex flex-wrap gap-2 items-center justify-between">
+    <div className="relative z-10 p-4 sm:p-6 space-y-6 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(225,29,72,0.18),transparent_42%),radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_38%)]">
+      {syncStatus !== 'idle' && (
+        <div className={`rounded-2xl border px-4 py-3 text-[10px] uppercase tracking-widest font-black ${syncStatus === 'success' ? 'bg-emerald-900/30 text-emerald-200 border-emerald-700/40' : syncStatus === 'error' ? 'bg-red-900/30 text-red-200 border-red-700/40' : 'bg-zinc-900/80 text-zinc-100 border-white/10'}`}>
+          {syncMessage}
+        </div>
+      )}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h3 className="text-sm uppercase tracking-[0.18em] font-black text-white">Analytics Command Center</h3>
           <p className="text-xs text-zinc-400 mt-1">Live operational intelligence for transcripts, quality, and risk.</p>
@@ -194,7 +199,7 @@ const AdminAnalytics = () => {
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="px-3 py-2 text-xs bg-zinc-900 border border-white/10 rounded-lg"
+            className="px-3 py-2 text-xs bg-[#111111] border border-white/10 rounded-2xl text-white"
           >
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
@@ -205,28 +210,28 @@ const AdminAnalytics = () => {
               setAutoRefresh((v) => !v);
               setTimedNotice(autoRefresh ? 'Live refresh disabled' : 'Live refresh enabled');
             }}
-            className={`px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-lg ${autoRefresh ? 'bg-emerald-800/40 text-emerald-200 border-emerald-700/50' : 'bg-zinc-900 text-zinc-200 border-white/10'}`}
+            className={`px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl ${autoRefresh ? 'bg-emerald-800/40 text-emerald-200 border-emerald-700/50' : 'bg-[#111111] text-zinc-200 border-white/10'}`}
           >
             Live {autoRefresh ? 'On' : 'Off'}
           </button>
           <button
             onClick={() => fetchAnalytics({ silent: true })}
             disabled={refreshing}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-lg bg-zinc-900 text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
+            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl bg-[#111111] text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
           >
             {refreshing ? 'Refreshing...' : 'Refresh'}
           </button>
           <button
             onClick={() => downloadReport('json')}
             disabled={isExporting}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-lg bg-zinc-900 text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
+            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl bg-[#111111] text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
           >
             Export JSON
           </button>
           <button
             onClick={() => downloadReport('csv')}
             disabled={isExporting}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-lg bg-zinc-900 text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
+            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl bg-[#111111] text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
           >
             Export CSV
           </button>

@@ -34,9 +34,12 @@ describe('AdminDashboard session actions', () => {
     vi.clearAllMocks();
     api.get.mockImplementation((url) => {
       if (url.includes('archive')) {
-        return Promise.resolve({ data: [] });
+        return Promise.resolve({ data: { items: [], has_next: false } });
       }
-      return Promise.resolve({ data: activeSessions });
+      if (url.includes('/export')) {
+        return Promise.resolve({ data: activeSessions[0] });
+      }
+      return Promise.resolve({ data: { items: activeSessions, has_next: false } });
     });
     api.delete.mockResolvedValue({ data: { status: 'success' } });
     api.post.mockResolvedValue({ data: { status: 'success' } });
@@ -64,16 +67,22 @@ describe('AdminDashboard session actions', () => {
     api.get.mockImplementation((url) => {
       if (url.includes('archive')) {
         return Promise.resolve({
-          data: [
+          data: {
+            items: [
             {
               ...activeSessions[0],
               status: 'discarded',
               discarded_at: '2026-04-13T11:00:00Z',
             },
-          ],
+            ],
+            has_next: false,
+          },
         });
       }
-      return Promise.resolve({ data: activeSessions });
+      if (url.includes('/export')) {
+        return Promise.resolve({ data: activeSessions[0] });
+      }
+      return Promise.resolve({ data: { items: activeSessions, has_next: false } });
     });
 
     render(
@@ -98,6 +107,52 @@ describe('AdminDashboard session actions', () => {
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/admin/sessions/42/restore');
+    });
+  });
+
+  it('includes a guest chat shortcut in the admin header', async () => {
+    const logout = vi.fn();
+
+    render(
+      <AuthContext.Provider value={{ logout }}>
+        <MemoryRouter>
+          <AdminDashboard />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Jordan • Session #42')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByText('Chat as Guest')[0]);
+
+    expect(logout).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes the mobile sidebar after switching to analytics', async () => {
+    render(
+      <AuthContext.Provider value={{ logout: vi.fn() }}>
+        <MemoryRouter>
+          <AdminDashboard />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Jordan • Session #42')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /open menu/i }));
+
+    expect(screen.getByTestId('admin-sidebar').className).toContain('translate-x-0');
+    expect(screen.getByTestId('admin-sidebar-backdrop')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^analytics$/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('admin-sidebar-backdrop')).not.toBeInTheDocument();
+      expect(screen.getByTestId('admin-sidebar').className).toContain('-translate-x-full');
     });
   });
 });

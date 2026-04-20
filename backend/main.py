@@ -1,9 +1,18 @@
 import os
+import sys
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import inspect, text
+
+# Support both launch styles:
+# 1) repo root: python -m uvicorn backend.main:app
+# 2) backend dir: python -m uvicorn main:app
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.core.config import settings
 from backend.models.sql_models import Base
@@ -53,7 +62,7 @@ async def lifespan(app: FastAPI):
     scheduler.shutdown()
     print("Background scheduler shut down.")
 
-app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
+app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan, root_path="/api")
 
 # CORS
 app.add_middleware(

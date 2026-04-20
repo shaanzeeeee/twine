@@ -64,6 +64,9 @@ Create a `.env` file in the root directory:
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/lukabot
 
+# Backend base URL for helper scripts (local or droplet)
+BACKEND_BASE_URL=http://127.0.0.1:8000
+
 # Vectors
 CHROMA_DB_DIR=./chroma_data
 
@@ -77,6 +80,21 @@ TOKEN_FILE=token.json
 
 # Security
 SECRET_KEY=your_secure_random_key
+```
+
+For a DigitalOcean droplet, set `BACKEND_BASE_URL` to your droplet address, for example:
+```env
+BACKEND_BASE_URL=http://YOUR_DROPLET_IP:8000
+```
+
+For the frontend dev proxy, set:
+```bash
+VITE_PROXY_TARGET=http://YOUR_DROPLET_IP:8000
+```
+
+For frontend API calls in non-proxied deployments, set:
+```bash
+VITE_API_URL=http://YOUR_DROPLET_IP:8000/api
 ```
 
 ### 4. Google API Setup

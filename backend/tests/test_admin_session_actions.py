@@ -66,3 +66,29 @@ def test_add_to_database_marks_session_approved_and_archived(client_and_db, monk
     matching = [item for item in archived.json() if item["session_id"] == session_id]
     assert len(matching) == 1
     assert matching[0]["status"] == "approved"
+
+
+def test_manual_drive_sync_uses_admin_route(client_and_db, monkeypatch):
+    client, _ = client_and_db
+
+    captured = {"called": False}
+
+    def _fake_sync():
+        captured["called"] = True
+        return {"status": "success", "message": "ok", "docs_indexed": 3}
+
+    monkeypatch.setattr("backend.api.admin.sync_drive_to_chroma", _fake_sync)
+
+    response = client.post("/admin/drive/sync")
+
+    assert response.status_code == 200
+    assert captured["called"] is True
+    assert response.json()["docs_indexed"] == 3
+
+
+def test_legacy_chat_sync_route_is_removed(client_and_db):
+    client, _ = client_and_db
+
+    response = client.post('/chat/sync')
+
+    assert response.status_code == 404

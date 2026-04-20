@@ -13,6 +13,7 @@ import time
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message, User, AnalyticsAlertRule
 from backend.api.deps import get_current_admin_user
+from backend.services.drive_sync import sync_drive_to_chroma
 from backend.services.chroma_service import chroma_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -79,6 +80,23 @@ def _cache_set(key: str, value):
 
 def _invalidate_analytics_cache():
     _analytics_cache.clear()
+
+
+@router.post("/drive/sync")
+def manual_drive_sync(
+    _current_user: User = Depends(get_current_admin_user),
+):
+    """Trigger a manual Google Drive sync for admin operations."""
+    try:
+        result = sync_drive_to_chroma()
+        _invalidate_analytics_cache()
+        if not result:
+            raise HTTPException(status_code=400, detail="Drive sync skipped because no drive folder is configured.")
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 def _collect_window_data(db: Session, days: int):

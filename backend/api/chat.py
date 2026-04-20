@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from backend.services.chat_service import chat_service
-from backend.services.drive_sync import sync_drive_to_chroma
 from backend.core.database import get_db
 from backend.models.sql_models import ChatSession, Message
 
@@ -72,10 +71,3 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/sync")
-async def trigger_manual_sync():
-    try:
-        result = sync_drive_to_chroma()
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

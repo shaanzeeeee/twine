@@ -1,0 +1,920 @@
+
+> frontend@0.0.0 test
+> vitest run --run src/components/ChatUI.test.jsx src/pages/AdminDashboard.test.jsx
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/Shaan/Desktop/Office Stuff/lukarag/frontend[39m
+
+ [32mΓ£ô[39m src/components/ChatUI.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[32m 277[2mms[22m[39m
+ [31mΓ¥»[39m src/pages/AdminDashboard.test.jsx [2m([22m[2m3 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[33m 3113[2mms[22m[39m
+[31m   [31m├ù[31m AdminDashboard session actions[2m > [22mopens discard confirmation modal[39m[33m 1047[2mms[22m[39m
+[31m     ΓåÆ Unable to find an element with the text: Jordan ΓÇó Session #42. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform -translate-x-full md:translate-x-0"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-6 border-b border-white/5 flex justify-between items-center bg-black/40"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-shield w-5 h-5 text-red-600"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"24"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"24"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+            [36m<h2[31m
+              [33mclass[31m=[32m"text-xs font-black uppercase tracking-widest text-gray-100"[31m
+            [36m>[31m
+              [0mIntelligence Logs[0m
+            [36m</h2>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"text-gray-500 hover:text-red-600 transition"[31m
+            [33mtitle[31m=[32m"Logout"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-log-out w-4 h-4"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"24"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"24"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"m16 17 5-5-5-5"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M21 12H9"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 border-b border-white/5 space-y-3"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"grid grid-cols-2 gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-red-900/40 text-red-200 border-red-700/40"[31m
+            [36m>[31m
+              [0mTranscripts[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+            [36m>[31m
+              [0mAnalytics[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+          [36m>[31m
+            [0mViewing Active Sessions[0m
+          [36m</button>[31m
+          [36m<input[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+            [33mplaceholder[31m=[32m"Search session id or content"[31m
+            [33mtype[31m=[32m"text"[31m
+            [33mvalue[31m=[32m""[31m
+          [36m/>[31m
+          [36m<select[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+          [36m>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"0"[31m
+            [36m>[31m
+              [0mAll sessions[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"4"[31m
+            [36m>[31m
+              [0m4+ messages[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"8"[31m
+            [36m>[31m
+              [0m8+ messages[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"12"[31m
+            [36m>[31m
+              [0m12+ messages[0m
+            [36m</option>[31m
+          [36m</select>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+              [33mdisabled[31m=[32m""[31m
+            [36m>[31m
+              [0mPrev[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+              [33mdisabled[31m=[32m""[31m
+            [36m>[31m
+              [0mNext[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex-1 overflow-y-auto p-4 space-y-2"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-4 text-center space-y-3"[31m
+          [36m>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-[10px] uppercase font-bold text-zinc-700 tracking-widest"[31m
+            [36m>[31m
+              [0mNo sessions found[0m
+            [36m</p>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-800 hover:bg-red-700 transition-all"[31m
+            [36m>[31m
+              [0m...
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform -translate-x-full md:translate-x-0"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-6 border-b border-white/5 flex justify-between items-center bg-black/40"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-2"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-shield w-5 h-5 text-red-600"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [36m<h2[31m
+                [33mclass[31m=[32m"text-xs font-black uppercase tracking-widest text-gray-100"[31m
+              [36m>[31m
+                [0mIntelligence Logs[0m
+              [36m</h2>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"text-gray-500 hover:text-red-600 transition"[31m
+              [33mtitle[31m=[32m"Logout"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-log-out w-4 h-4"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m16 17 5-5-5-5"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M21 12H9"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-4 border-b border-white/5 space-y-3"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"grid grid-cols-2 gap-2"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-red-900/40 text-red-200 border-red-700/40"[31m
+              [36m>[31m
+                [0mTranscripts[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+              [36m>[31m
+                [0mAnalytics[0m
+              [36m</button>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+            [36m>[31m
+              [0mViewing Active Sessions[0m
+            [36m</button>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+              [33mplaceholder[31m=[32m"Search session id or content"[31m
+              [33mtype[31m=[32m"text"[31m
+              [33mvalue[31m=[32m""[31m
+            [36m/>[31m
+            [36m<select[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+            [36m>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"0"[31m
+              [36m>[31m
+                [0mAll sessions[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"4"[31m
+              [36m>[31m
+                [0m4+ messages[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"8"[31m
+              [36m>[31m
+                [0m8+ messages[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"12"[31m
+              [36m>[31m
+                [0m12+ messages[0m
+              [36m</option>[31m
+            [36m</select>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex gap-2"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+                [33mdisabled[31m=[32m""[31m
+              [36m>[31m
+                [0mPrev[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+                [33mdisabled[31m=[32m""[31m
+              [36m>[31m
+                [0mNext[0m
+              [36m</button>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex-1 overflow-y-auto p-4 space-y-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"p-4 text-center space-y-3"[31m
+            [36m>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"text-[10px] uppercase font-bold text-zinc-700 tracki...[39m
+[31m   [31m├ù[31m AdminDashboard session actions[2m > [22mswitches to archive view and calls restore endpoint[39m[33m 1043[2mms[22m[39m
+[31m     ΓåÆ Unable to find an element with the text: Restore Session. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform -translate-x-full md:translate-x-0"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-6 border-b border-white/5 flex justify-between items-center bg-black/40"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-shield w-5 h-5 text-red-600"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"24"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"24"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+            [36m<h2[31m
+              [33mclass[31m=[32m"text-xs font-black uppercase tracking-widest text-gray-100"[31m
+            [36m>[31m
+              [0mIntelligence Logs[0m
+            [36m</h2>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"text-gray-500 hover:text-red-600 transition"[31m
+            [33mtitle[31m=[32m"Logout"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-log-out w-4 h-4"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"24"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"24"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"m16 17 5-5-5-5"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M21 12H9"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 border-b border-white/5 space-y-3"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"grid grid-cols-2 gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-red-900/40 text-red-200 border-red-700/40"[31m
+            [36m>[31m
+              [0mTranscripts[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+            [36m>[31m
+              [0mAnalytics[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-amber-900/30 text-amber-200 border-amber-700/40"[31m
+          [36m>[31m
+            [0mViewing Archive[0m
+          [36m</button>[31m
+          [36m<input[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+            [33mplaceholder[31m=[32m"Search session id or content"[31m
+            [33mtype[31m=[32m"text"[31m
+            [33mvalue[31m=[32m""[31m
+          [36m/>[31m
+          [36m<select[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+          [36m>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"0"[31m
+            [36m>[31m
+              [0mAll sessions[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"4"[31m
+            [36m>[31m
+              [0m4+ messages[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"8"[31m
+            [36m>[31m
+              [0m8+ messages[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"12"[31m
+            [36m>[31m
+              [0m12+ messages[0m
+            [36m</option>[31m
+          [36m</select>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+              [33mdisabled[31m=[32m""[31m
+            [36m>[31m
+              [0mPrev[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+              [33mdisabled[31m=[32m""[31m
+            [36m>[31m
+              [0mNext[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex-1 overflow-y-auto p-4 space-y-2"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-4 text-center space-y-3"[31m
+          [36m>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-[10px] uppercase font-bold text-zinc-700 tracking-widest"[31m
+            [36m>[31m
+              [0mNo sessions found[0m
+            [36m</p>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-800 hover:bg-red-700 transition-all"[31m
+            [36m>[31m
+              [0mGo To Chat[0m
+     ...
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform -translate-x-full md:translate-x-0"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-6 border-b border-white/5 flex justify-between items-center bg-black/40"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-2"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-shield w-5 h-5 text-red-600"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [36m<h2[31m
+                [33mclass[31m=[32m"text-xs font-black uppercase tracking-widest text-gray-100"[31m
+              [36m>[31m
+                [0mIntelligence Logs[0m
+              [36m</h2>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"text-gray-500 hover:text-red-600 transition"[31m
+              [33mtitle[31m=[32m"Logout"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-log-out w-4 h-4"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m16 17 5-5-5-5"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M21 12H9"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-4 border-b border-white/5 space-y-3"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"grid grid-cols-2 gap-2"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-red-900/40 text-red-200 border-red-700/40"[31m
+              [36m>[31m
+                [0mTranscripts[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+              [36m>[31m
+                [0mAnalytics[0m
+              [36m</button>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-amber-900/30 text-amber-200 border-amber-700/40"[31m
+            [36m>[31m
+              [0mViewing Archive[0m
+            [36m</button>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+              [33mplaceholder[31m=[32m"Search session id or content"[31m
+              [33mtype[31m=[32m"text"[31m
+              [33mvalue[31m=[32m""[31m
+            [36m/>[31m
+            [36m<select[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+            [36m>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"0"[31m
+              [36m>[31m
+                [0mAll sessions[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"4"[31m
+              [36m>[31m
+                [0m4+ messages[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"8"[31m
+              [36m>[31m
+                [0m8+ messages[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"12"[31m
+              [36m>[31m
+                [0m12+ messages[0m
+              [36m</option>[31m
+            [36m</select>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex gap-2"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+                [33mdisabled[31m=[32m""[31m
+              [36m>[31m
+                [0mPrev[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+                [33mdisabled[31m=[32m""[31m
+              [36m>[31m
+                [0mNext[0m
+              [36m</button>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex-1 overflow-y-auto p-4 space-y-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"p-4 text-center space-y-3"[31m
+            [36m>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"text-[10px] uppercase font-bold text-zinc-700 tracking-widest"[31m
+    ...[39m
+[31m   [31m├ù[31m AdminDashboard session actions[2m > [22mincludes a guest chat shortcut in the admin header[39m[33m 1022[2mms[22m[39m
+[31m     ΓåÆ Unable to find an element with the text: Jordan ΓÇó Session #42. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform -translate-x-full md:translate-x-0"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-6 border-b border-white/5 flex justify-between items-center bg-black/40"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex items-center gap-2"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-shield w-5 h-5 text-red-600"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"24"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"24"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+            [36m<h2[31m
+              [33mclass[31m=[32m"text-xs font-black uppercase tracking-widest text-gray-100"[31m
+            [36m>[31m
+              [0mIntelligence Logs[0m
+            [36m</h2>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"text-gray-500 hover:text-red-600 transition"[31m
+            [33mtitle[31m=[32m"Logout"[31m
+          [36m>[31m
+            [36m<svg[31m
+              [33maria-hidden[31m=[32m"true"[31m
+              [33mclass[31m=[32m"lucide lucide-log-out w-4 h-4"[31m
+              [33mfill[31m=[32m"none"[31m
+              [33mheight[31m=[32m"24"[31m
+              [33mstroke[31m=[32m"currentColor"[31m
+              [33mstroke-linecap[31m=[32m"round"[31m
+              [33mstroke-linejoin[31m=[32m"round"[31m
+              [33mstroke-width[31m=[32m"2"[31m
+              [33mviewBox[31m=[32m"0 0 24 24"[31m
+              [33mwidth[31m=[32m"24"[31m
+              [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+            [36m>[31m
+              [36m<path[31m
+                [33md[31m=[32m"m16 17 5-5-5-5"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M21 12H9"[31m
+              [36m/>[31m
+              [36m<path[31m
+                [33md[31m=[32m"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"[31m
+              [36m/>[31m
+            [36m</svg>[31m
+          [36m</button>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"p-4 border-b border-white/5 space-y-3"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"grid grid-cols-2 gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-red-900/40 text-red-200 border-red-700/40"[31m
+            [36m>[31m
+              [0mTranscripts[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+            [36m>[31m
+              [0mAnalytics[0m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<button[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+          [36m>[31m
+            [0mViewing Active Sessions[0m
+          [36m</button>[31m
+          [36m<input[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+            [33mplaceholder[31m=[32m"Search session id or content"[31m
+            [33mtype[31m=[32m"text"[31m
+            [33mvalue[31m=[32m""[31m
+          [36m/>[31m
+          [36m<select[31m
+            [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+          [36m>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"0"[31m
+            [36m>[31m
+              [0mAll sessions[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"4"[31m
+            [36m>[31m
+              [0m4+ messages[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"8"[31m
+            [36m>[31m
+              [0m8+ messages[0m
+            [36m</option>[31m
+            [36m<option[31m
+              [33mvalue[31m=[32m"12"[31m
+            [36m>[31m
+              [0m12+ messages[0m
+            [36m</option>[31m
+          [36m</select>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex gap-2"[31m
+          [36m>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+              [33mdisabled[31m=[32m""[31m
+            [36m>[31m
+              [0mPrev[0m
+            [36m</button>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+              [33mdisabled[31m=[32m""[31m
+            [36m>[31m
+              [0mNext[0m
+            [36m</button>[31m
+          [36m</div>[31m
+        [36m</div>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"flex-1 overflow-y-auto p-4 space-y-2"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-4 text-center space-y-3"[31m
+          [36m>[31m
+            [36m<p[31m
+              [33mclass[31m=[32m"text-[10px] uppercase font-bold text-zinc-700 tracking-widest"[31m
+            [36m>[31m
+              [0mNo sessions found[0m
+            [36m</p>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"px-3 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-800 hover:bg-red-700 transition-all"[31m
+            [36m>[31m
+              [0m...
+
+Ignored nodes: comments, script, style
+[36m<html>[31m
+  [36m<head />[31m
+  [36m<body>[31m
+    [36m<div>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden"[31m
+      [36m>[31m
+        [36m<div[31m
+          [33mclass[31m=[32m"fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform -translate-x-full md:translate-x-0"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-6 border-b border-white/5 flex justify-between items-center bg-black/40"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex items-center gap-2"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-shield w-5 h-5 text-red-600"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+              [36m<h2[31m
+                [33mclass[31m=[32m"text-xs font-black uppercase tracking-widest text-gray-100"[31m
+              [36m>[31m
+                [0mIntelligence Logs[0m
+              [36m</h2>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"text-gray-500 hover:text-red-600 transition"[31m
+              [33mtitle[31m=[32m"Logout"[31m
+            [36m>[31m
+              [36m<svg[31m
+                [33maria-hidden[31m=[32m"true"[31m
+                [33mclass[31m=[32m"lucide lucide-log-out w-4 h-4"[31m
+                [33mfill[31m=[32m"none"[31m
+                [33mheight[31m=[32m"24"[31m
+                [33mstroke[31m=[32m"currentColor"[31m
+                [33mstroke-linecap[31m=[32m"round"[31m
+                [33mstroke-linejoin[31m=[32m"round"[31m
+                [33mstroke-width[31m=[32m"2"[31m
+                [33mviewBox[31m=[32m"0 0 24 24"[31m
+                [33mwidth[31m=[32m"24"[31m
+                [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+              [36m>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"m16 17 5-5-5-5"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M21 12H9"[31m
+                [36m/>[31m
+                [36m<path[31m
+                  [33md[31m=[32m"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"[31m
+                [36m/>[31m
+              [36m</svg>[31m
+            [36m</button>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"p-4 border-b border-white/5 space-y-3"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"grid grid-cols-2 gap-2"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-red-900/40 text-red-200 border-red-700/40"[31m
+              [36m>[31m
+                [0mTranscripts[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+              [36m>[31m
+                [0mAnalytics[0m
+              [36m</button>[31m
+            [36m</div>[31m
+            [36m<button[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600"[31m
+            [36m>[31m
+              [0mViewing Active Sessions[0m
+            [36m</button>[31m
+            [36m<input[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+              [33mplaceholder[31m=[32m"Search session id or content"[31m
+              [33mtype[31m=[32m"text"[31m
+              [33mvalue[31m=[32m""[31m
+            [36m/>[31m
+            [36m<select[31m
+              [33mclass[31m=[32m"w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"[31m
+            [36m>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"0"[31m
+              [36m>[31m
+                [0mAll sessions[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"4"[31m
+              [36m>[31m
+                [0m4+ messages[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"8"[31m
+              [36m>[31m
+                [0m8+ messages[0m
+              [36m</option>[31m
+              [36m<option[31m
+                [33mvalue[31m=[32m"12"[31m
+              [36m>[31m
+                [0m12+ messages[0m
+              [36m</option>[31m
+            [36m</select>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex gap-2"[31m
+            [36m>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+                [33mdisabled[31m=[32m""[31m
+              [36m>[31m
+                [0mPrev[0m
+              [36m</button>[31m
+              [36m<button[31m
+                [33mclass[31m=[32m"flex-1 px-2 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 disabled:opacity-40"[31m
+                [33mdisabled[31m=[32m""[31m
+              [36m>[31m
+                [0mNext[0m
+              [36m</button>[31m
+            [36m</div>[31m
+          [36m</div>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"flex-1 overflow-y-auto p-4 space-y-2"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"p-4 text-center space-y-3"[31m
+            [36m>[31m
+              [36m<p[31m
+                [33mclass[31m=[32m"text-[10px] uppercase font-bold text-zinc-700 tracki...[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 09:17:08
+[2m   Duration [22m 5.36s[2m (transform 247ms, setup 232ms, collect 1.16s, tests 3.39s, environment 1.98s, prepare 384ms)[22m
+

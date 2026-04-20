@@ -11,6 +11,7 @@ import {
     Trash2,
     Menu,
     Download,
+    RefreshCw,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,6 +32,10 @@ const AdminDashboard = () => {
     const [toast, setToast] = useState(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [pendingDiscard, setPendingDiscard] = useState(null);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [refreshToken, setRefreshToken] = useState(0);
+    const [syncStatus, setSyncStatus] = useState('idle');
+    const [syncMessage, setSyncMessage] = useState('');
     const { logout } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -189,6 +194,50 @@ const AdminDashboard = () => {
         navigate('/login');
     };
 
+    const handleChatAsGuest = () => {
+        logout();
+        navigate('/');
+    };
+
+    const closeSidebar = () => setSidebarOpen(false);
+
+    const handleDriveSync = async () => {
+        try {
+            setIsSyncing(true);
+            setSyncStatus('in_progress');
+            setSyncMessage('Manual ingest in progress...');
+            const response = await api.post('/admin/drive/sync');
+            if (response.data?.status === 'error') {
+                const message = response.data.message || 'Drive sync failed';
+                setSyncStatus('error');
+                setSyncMessage(message);
+                pushToast(message, 'error');
+                return;
+            }
+            const message = `Drive sync complete${response.data?.docs_indexed != null ? ` • ${response.data.docs_indexed} docs indexed` : ''}`;
+            pushToast(
+                message,
+                'info'
+            );
+            setSyncStatus('success');
+            setSyncMessage(message);
+            setRefreshToken((value) => value + 1);
+            await fetchTranscripts();
+        } catch (error) {
+            const message = error?.response?.data?.detail || 'Drive sync failed';
+            setSyncStatus('error');
+            setSyncMessage(message);
+            pushToast(message, 'error');
+        } finally {
+            setIsSyncing(false);
+            window.clearTimeout(window.__admin_sync_timer);
+            window.__admin_sync_timer = window.setTimeout(() => {
+                setSyncStatus('idle');
+                setSyncMessage('');
+            }, 3500);
+        }
+    };
+
     const formatDateTime = (value) => {
         return new Date(value).toLocaleString([], {
             month: 'short',
@@ -219,8 +268,20 @@ const AdminDashboard = () => {
 
     return (
         <div className="flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden">
+            {sidebarOpen && (
+                <button
+                    type="button"
+                    aria-label="Close sidebar"
+                    onClick={closeSidebar}
+                    data-testid="admin-sidebar-backdrop"
+                    className="fixed inset-0 z-20 bg-black/60 md:hidden"
+                />
+            )}
             {/* Sidebar */}
-            <div className={`fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+            <div
+                data-testid="admin-sidebar"
+                className={`fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+            >
                 <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/40">
                     <div className="flex items-center gap-2">
                         <Shield className="w-5 h-5 text-red-600" />
@@ -228,27 +289,47 @@ const AdminDashboard = () => {
                            Intelligence Logs
                         </h2>
                     </div>
-                    <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition" title="Logout">
-                        <LogOut className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={closeSidebar}
+                            className="md:hidden text-gray-400 hover:text-white transition"
+                            title="Close sidebar"
+                            aria-label="Close sidebar"
+                        >
+                            <Menu className="w-4 h-4 rotate-180" />
+                        </button>
+                        <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition" title="Logout">
+                            <LogOut className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
                 <div className="p-4 border-b border-white/5 space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                         <button
-                            onClick={() => setViewMode('transcripts')}
+                            onClick={() => {
+                                setViewMode('transcripts');
+                                closeSidebar();
+                            }}
                             className={`px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${viewMode === 'transcripts' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
                         >
                             Transcripts
                         </button>
                         <button
-                            onClick={() => setViewMode('analytics')}
+                            onClick={() => {
+                                setViewMode('analytics');
+                                closeSidebar();
+                            }}
                             className={`px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${viewMode === 'analytics' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
                         >
                             Analytics
                         </button>
                     </div>
                     <button
-                        onClick={() => setShowArchived((prev) => !prev)}
+                        onClick={() => {
+                            setShowArchived((prev) => !prev);
+                            closeSidebar();
+                        }}
                         className={`w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${showArchived ? 'bg-amber-900/30 text-amber-200 border-amber-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
                     >
                         {showArchived ? 'Viewing Archive' : 'Viewing Active Sessions'}
@@ -300,7 +381,7 @@ const AdminDashboard = () => {
                             key={session.session_id}
                             onClick={async () => {
                                 await loadSessionDetails(session);
-                                setSidebarOpen(false);
+                                closeSidebar();
                             }}
                             className={`w-full text-left p-4 transition-all duration-300 relative group overflow-hidden ${
                                 selectedSession?.session_id === session.session_id
@@ -339,9 +420,60 @@ const AdminDashboard = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] relative">
-                 <div className="absolute inset-0 opacity-5 bg-[url('/gym-bg.png')] bg-cover bg-center grayscale" />
+            <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] relative min-w-0">
+                 <div className="absolute inset-0 opacity-5 bg-[url('/gym-bg.png')] bg-cover bg-center grayscale pointer-events-none" />
+                 {syncStatus !== 'idle' && (
+                     <div className={`relative z-20 mx-4 mt-4 sm:mx-8 px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest ${syncStatus === 'success' ? 'bg-emerald-900/40 text-emerald-200 border-emerald-700/40' : syncStatus === 'error' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900/90 text-zinc-100 border-white/10'}`}>
+                         {syncMessage}
+                     </div>
+                 )}
                 
+                 {/* Mobile Header Tool */}
+                 <div className="md:hidden relative z-20 flex flex-wrap items-center justify-between gap-3 p-4 border-b border-white/5 bg-[#0a0a0a] shrink-0">
+                     <button
+                         onClick={() => setSidebarOpen((prev) => !prev)}
+                         className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                     >
+                         <Menu className="w-3 h-3" />
+                         {sidebarOpen ? 'Close Menu' : 'Open Menu'}
+                     </button>
+                     <div className="flex flex-wrap items-center gap-2">
+                         <button
+                             onClick={handleChatAsGuest}
+                             className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                         >
+                             <MessageSquare className="w-3 h-3" />
+                             Guest Chat
+                         </button>
+                         <button
+                             onClick={handleDriveSync}
+                             disabled={isSyncing}
+                             className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-red-600 border border-red-600 rounded-2xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                         >
+                             <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                             Ingest
+                         </button>
+                     </div>
+                 </div>
+
+                <div className="relative z-10 hidden md:flex items-center justify-end gap-2 px-8 py-3 border-b border-white/5 bg-black/20 backdrop-blur-xl shrink-0">
+                    <button
+                        onClick={handleChatAsGuest}
+                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                    >
+                        <MessageSquare className="w-3 h-3" />
+                        Chat as Guest
+                    </button>
+                    <button
+                        onClick={handleDriveSync}
+                        disabled={isSyncing}
+                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-red-600 border border-red-600 rounded-2xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                        <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                        {isSyncing ? 'Syncing Drive' : 'Ingest Drive'}
+                    </button>
+                </div>
+
                 {viewMode === 'analytics' ? (
                     <Suspense
                         fallback={
@@ -352,28 +484,21 @@ const AdminDashboard = () => {
                             </div>
                         }
                     >
-                        <AdminAnalytics />
+                        <AdminAnalytics refreshToken={refreshToken} syncStatus={syncStatus} syncMessage={syncMessage} />
                     </Suspense>
                 ) : selectedSession ? (
                     <>
-                        <div className="relative z-10 h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex items-center px-8 justify-between shrink-0">
-                            <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest text-white italic">KingsBox Intelligence Report</h3>
-                                <p className="text-[10px] text-zinc-500 font-bold">
+                        <div className="relative z-10 h-auto py-3 sm:py-0 sm:h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center px-4 sm:px-8 justify-between shrink-0 gap-3 sm:gap-0">
+                            <div className="truncate w-full sm:w-auto">
+                                <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white italic truncate">KingsBox Intelligence Report</h3>
+                                <p className="text-[9px] sm:text-[10px] text-zinc-500 font-bold truncate">
                                     {selectedSession.guest_name ? `Guest: ${selectedSession.guest_name}` : 'Guest: Anonymous'} • Session ID: {selectedSession.session_id}
                                 </p>
                             </div>
-                            <div className="flex items-center space-x-2">
-                                <button
-                                    onClick={() => setSidebarOpen((prev) => !prev)}
-                                    className="md:hidden flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-zinc-700 transition-all"
-                                >
-                                    <Menu className="w-3 h-3" />
-                                    Sessions
-                                </button>
+                            <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={exportSession}
-                                    className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-zinc-700 transition-all"
+                                    className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
                                 >
                                     <Download className="w-3 h-3" />
                                     Export
@@ -381,7 +506,7 @@ const AdminDashboard = () => {
                                 {showArchived ? (
                                     <button
                                         onClick={handleRestoreSession}
-                                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-blue-700 transition-all"
+                                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
                                     >
                                         <Database className="w-3 h-3" />
                                         Restore Session
@@ -390,14 +515,14 @@ const AdminDashboard = () => {
                                     <>
                                         <button
                                             onClick={handleAddSessionToDatabase}
-                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-emerald-700 transition-all"
+                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
                                         >
                                             <Database className="w-3 h-3" />
                                             Add to Database
                                         </button>
                                         <button
                                             onClick={() => setShowDiscardConfirm(true)}
-                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-800 hover:bg-red-700 transition-all"
+                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
                                         >
                                             <Trash2 className="w-3 h-3" />
                                             Discard
@@ -407,7 +532,7 @@ const AdminDashboard = () => {
                             </div>
                         </div>
                         
-                        <div className="relative z-10 flex-1 overflow-y-auto p-10 space-y-8">
+                        <div className="relative z-10 flex-1 overflow-y-auto p-4 sm:p-10 space-y-6 sm:space-y-8">
                             {sessionLoading && (
                                 <div className="text-xs uppercase tracking-widest text-zinc-500">Loading full session...</div>
                             )}
@@ -415,7 +540,7 @@ const AdminDashboard = () => {
                                 const isUser = msg.role === 'user';
                                 return (
                                     <div key={msg.id} className={`flex max-w-[90%] ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}>
-                                        <div className={`relative px-6 py-4 shadow-2xl transition-all border border-white/5 backdrop-blur-sm ${
+                                        <div className={`relative w-full px-4 sm:px-6 py-3 sm:py-4 shadow-2xl transition-all border border-white/5 backdrop-blur-sm ${
                                             isUser 
                                             ? 'bg-red-600/90 text-white skew-x-[-2deg]' 
                                             : 'bg-zinc-900/90 text-zinc-100 skew-x-[2deg]'
