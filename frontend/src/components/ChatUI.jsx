@@ -50,15 +50,25 @@ const ChatUI = () => {
   };
 
   useEffect(() => {
+    if (user?.role === 'Admin') {
+      setGuestName('Admin');
+      setGuestNameDraft('Admin');
+      setIsGuestReady(true);
+      setSessionHistory(loadSessionHistory());
+      return;
+    }
+
     const storedName = localStorage.getItem('guest_name') || '';
     const normalized = storedName.trim();
     if (normalized) {
       setGuestName(normalized);
       setGuestNameDraft(normalized);
       setIsGuestReady(true);
+    } else {
+      setIsGuestReady(false);
     }
     setSessionHistory(loadSessionHistory());
-  }, []);
+  }, [user]);
 
   const persistSessionHistory = (history) => {
     localStorage.setItem('chat_session_history', JSON.stringify(history));
@@ -303,13 +313,15 @@ const ChatUI = () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <button
-            onClick={editGuestName}
-            className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 hover:text-white transition-all"
-          >
-            <PenLine size={12} />
-            {guestName ? guestName : 'Guest Name'}
-          </button>
+          {user?.role !== 'Admin' && (
+            <button
+              onClick={editGuestName}
+              className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 hover:text-white transition-all"
+            >
+              <PenLine size={12} />
+              {guestName ? guestName : 'Guest Name'}
+            </button>
+          )}
           <button
             onClick={() => navigate(user?.role === 'Admin' ? '/admin' : '/login')}
             className="flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-widest font-black bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 hover:text-white transition-all"

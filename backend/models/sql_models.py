@@ -68,3 +68,13 @@ class AnalyticsAlertRule(Base):
     comparator = Column(String(10), nullable=False, default=">=")
     enabled = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class LearnedKnowledge(Base):
+    __tablename__ = "learned_knowledge"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(Text, nullable=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
