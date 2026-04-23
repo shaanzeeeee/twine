@@ -1,9 +1,10 @@
 import requests
 import json
 import time
+import os
 from concurrent.futures import ThreadPoolExecutor
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 # Categories of tests
 test_categories = {
@@ -63,7 +64,7 @@ def run_test(prompt):
     try:
         start_time = time.time()
         response = requests.post(
-            f"{BASE_URL}/chat/",
+            f"{BASE_URL}/api/chat/",
             json={"message": prompt, "history": []},
             timeout=30
         )

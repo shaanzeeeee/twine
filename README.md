@@ -64,6 +64,9 @@ Create a `.env` file in the root directory:
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/lukabot
 
+# Backend base URL for helper scripts (local or droplet)
+BACKEND_BASE_URL=http://127.0.0.1:8000
+
 # Vectors
 CHROMA_DB_DIR=./chroma_data
 
@@ -79,7 +82,43 @@ TOKEN_FILE=token.json
 SECRET_KEY=your_secure_random_key
 ```
 
-### 4. Google API Setup
+For a DigitalOcean droplet, set `BACKEND_BASE_URL` to your droplet address, for example:
+```env
+BACKEND_BASE_URL=http://YOUR_DROPLET_IP:8000
+```
+
+For the frontend dev proxy, set:
+```bash
+VITE_PROXY_TARGET=http://YOUR_DROPLET_IP:8000
+```
+
+For frontend API calls in non-proxied deployments, set:
+```bash
+VITE_API_URL=http://YOUR_DROPLET_IP:8000/api
+```
+
+### 4. DigitalOcean Droplet Deployment
+A helper deployment script is available at `scripts/deploy_droplet.sh`.
+
+1. Create a fresh Ubuntu droplet.
+2. Copy your repo onto the droplet or clone it from GitHub.
+3. Set these environment variables before running the deploy script:
+   - `REPO_URL` (Git clone URL)
+   - `DB_USER`, `DB_PASS`, `DB_NAME`
+   - `DOMAIN` (or `_` to use the droplet IP)
+
+Example:
+```bash
+sudo REPO_URL=git@github.com:your-org/lukarag.git DB_USER=lukabot DB_PASS=securepass DB_NAME=lukabot DOMAIN=example.com ./scripts/deploy_droplet.sh
+```
+
+4. After deployment, copy your Google Drive `credentials.json` into the repo root and update `.env`.
+5. Restart the app once `.env` is configured:
+```bash
+sudo systemctl restart lukabot.service
+```
+
+### 5. Google API Setup
 - Place your `credentials.json` from Google Cloud Console in the root.
 - Run `python scripts/setup_drive.py` to authorize and generate `token.json`.
 

@@ -39,4 +39,18 @@ describe('ChatUI guest onboarding', () => {
 
     expect(screen.getByRole('heading', { name: 'Welcome, Jordan' })).toBeInTheDocument();
   });
+
+  it('keeps the mobile composer at a readable text size', async () => {
+    render(
+      <AuthContext.Provider value={{ user: null }}>
+        <MemoryRouter>
+          <ChatUI />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+
+    const composer = screen.getByLabelText('Chat input');
+    expect(composer).toHaveClass('text-base');
+    expect(composer).toHaveClass('min-h-[52px]');
+  });
 });

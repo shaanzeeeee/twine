@@ -10,6 +10,11 @@
   --kb-muted: #a0a0a0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
@@ -18,6 +23,7 @@ body {
   background-color: var(--kb-black);
   color: var(--kb-text);
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 * {
