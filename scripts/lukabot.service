@@ -1,0 +1,16 @@
+[Unit]
+Description=LukaBot FastAPI backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/lukarag
+EnvironmentFile=/opt/lukarag/.env
+ExecStart=/opt/lukarag/.venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
