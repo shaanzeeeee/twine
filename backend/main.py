@@ -17,6 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from backend.core.config import settings
 from backend.models.sql_models import Base
 from backend.api import chat, auth, admin
+from backend.api.zulip import router as zulip_router
 from backend.services.drive_sync import sync_drive_to_chroma
 from backend.core.database import engine
 
@@ -76,6 +77,7 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(zulip_router)
 
 @app.get("/health")
 def health_check():

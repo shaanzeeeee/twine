@@ -15,4 +15,5 @@ passlib[bcrypt]
 python-multipart
 pydantic
 alembic
+requests
 pytest

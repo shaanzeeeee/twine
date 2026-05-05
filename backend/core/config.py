@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     CREDENTIALS_FILE: str = os.getenv("CREDENTIALS_FILE", "credentials.json")
     TOKEN_FILE: str = os.getenv("TOKEN_FILE", "token.json")
 
+    # Zulip integration
+    ZULIP_SITE_URL: str = os.getenv("ZULIP_SITE_URL", "")
+    ZULIP_BOT_EMAIL: str = os.getenv("ZULIP_BOT_EMAIL", "")
+    ZULIP_API_KEY: str = os.getenv("ZULIP_API_KEY", "")
+
     class Config:
         env_file = str(Path(__file__).resolve().parents[1] / ".env")
         env_file_encoding = "utf-8"
