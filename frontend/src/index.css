@@ -3,32 +3,32 @@
 
 :root {
   /* Twine Elegant Design Tokens */
-  --twine-primary: #3B82F6;
-  --twine-primary-hover: #2563EB;
-  --twine-primary-soft: rgba(59, 130, 246, 0.12);
-  --twine-secondary: #8B5CF6;
-  --twine-secondary-hover: #7C3AED;
-  --twine-secondary-soft: rgba(139, 92, 246, 0.10);
+  --twine-primary: #38BDF8;
+  --twine-primary-hover: #0EA5E9;
+  --twine-primary-soft: rgba(56, 189, 248, 0.10);
+  --twine-secondary: #818CF8;
+  --twine-secondary-hover: #6366F1;
+  --twine-secondary-soft: rgba(129, 140, 248, 0.08);
 
-  --twine-surface: #09090F;
-  --twine-surface-elevated: #111119;
-  --twine-surface-card: rgba(17, 17, 25, 0.75);
-  --twine-surface-glass: rgba(255, 255, 255, 0.03);
+  --twine-surface: #020617; /* Deepest Slate */
+  --twine-surface-elevated: #0F172A; /* Slate 900 */
+  --twine-surface-card: rgba(15, 23, 42, 0.8);
+  --twine-surface-glass: rgba(255, 255, 255, 0.02);
 
-  --twine-text: #F5F5F5;
-  --twine-text-secondary: #A1A1AA;
-  --twine-muted: #52525B;
-  --twine-border: rgba(255, 255, 255, 0.07);
-  --twine-border-hover: rgba(255, 255, 255, 0.14);
+  --twine-text: #F8FAFC;
+  --twine-text-secondary: #94A3B8;
+  --twine-muted: #475569;
+  --twine-border: rgba(255, 255, 255, 0.04);
+  --twine-border-hover: rgba(255, 255, 255, 0.08);
 
-  --twine-success: #16A34A;
-  --twine-warning: #D97706;
-  --twine-danger: #DC2626;
+  --twine-success: #10B981;
+  --twine-warning: #F59E0B;
+  --twine-danger: #EF4444;
 
-  --twine-gradient-primary: linear-gradient(135deg, #3B82F6, #8B5CF6);
-  --twine-gradient-surface: linear-gradient(180deg, #09090F 0%, #0D0D18 100%);
+  --twine-gradient-primary: linear-gradient(135deg, #38BDF8, #818CF8);
+  --twine-gradient-surface: radial-gradient(circle at top center, #1E293B 0%, #020617 100%);
 
-  --twine-shadow-glow: 0 0 40px rgba(59, 130, 246, 0.08);
+  --twine-shadow-glow: 0 0 40px rgba(56, 189, 248, 0.05);
   --twine-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
 
   --twine-radius-sm: 8px;
@@ -130,6 +130,26 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes twine-border-flow {
+  0%, 100% {
+    border-color: var(--twine-border);
+    box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+  }
+  50% {
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+  }
+}
+
+.twine-border-glow {
+  transition: all 0.3s ease;
+}
+
+.twine-border-glow:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.05);
 }
 
 .twine-fade-in {

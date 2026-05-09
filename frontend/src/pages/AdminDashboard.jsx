@@ -284,10 +284,10 @@ const AdminDashboard = () => {
                 className={`fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
             >
                 <div className="p-6 border-b border-white/[0.05] flex justify-between items-center bg-[#0D0D15]">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-blue-400" />
-                        <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-gray-100">
-                           Twine Dashboard
+                    <div className="flex items-center gap-3">
+                        <img src="/logo.png" alt="Twine Logo" className="w-6 h-6 object-contain" />
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-100">
+                           Twine <span className="text-sky-400">Engine</span>
                         </h2>
                     </div>
                     <div className="flex items-center gap-2">
@@ -312,7 +312,7 @@ const AdminDashboard = () => {
                                 setViewMode('transcripts');
                                 closeSidebar();
                             }}
-                            className={`px-3 py-2 text-xs font-bold uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'transcripts' ? 'bg-blue-500/15 text-blue-200 border-blue-500/30' : 'bg-white/[0.03] text-zinc-100 border-white/[0.07] hover:border-blue-500/40'}`}
+                            className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'transcripts' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-white/[0.02] text-slate-400 border-white/[0.05] hover:border-sky-500/30'}`}
                         >
                             Transcripts
                         </button>
@@ -321,7 +321,7 @@ const AdminDashboard = () => {
                                 setViewMode('analytics');
                                 closeSidebar();
                             }}
-                            className={`px-3 py-2 text-xs font-bold uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'analytics' ? 'bg-blue-500/15 text-blue-200 border-blue-500/30' : 'bg-white/[0.03] text-zinc-100 border-white/[0.07] hover:border-blue-500/40'}`}
+                            className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'analytics' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-white/[0.02] text-slate-400 border-white/[0.05] hover:border-sky-500/30'}`}
                         >
                             Analytics
                         </button>
@@ -393,24 +393,26 @@ const AdminDashboard = () => {
                                 await loadSessionDetails(session);
                                 closeSidebar();
                             }}
-                            className={`w-full text-left p-4 transition-all duration-300 relative group overflow-hidden ${
+                            className={`w-full text-left p-4 transition-all duration-300 relative group overflow-hidden border-b border-white/[0.03] ${
                                 selectedSession?.session_id === session.session_id
-                                ? 'bg-zinc-800 shadow-xl scale-[1.02] border-l-4 border-red-600 skew-x-[-2deg]'
-                                : 'hover:bg-zinc-900/50 grayscale hover:grayscale-0'
+                                ? 'bg-sky-500/[0.03] border-l-2 border-sky-500'
+                                : 'hover:bg-white/[0.02]'
                             } ${viewMode !== 'transcripts' ? 'opacity-40 pointer-events-none' : ''}`}
                         >
                             <div className="flex justify-between items-start relative z-10">
-                                <span className={`text-[10px] font-black uppercase tracking-tighter ${
-                                    selectedSession?.session_id === session.session_id ? 'text-white' : 'text-gray-500'
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                    selectedSession?.session_id === session.session_id ? 'text-sky-400' : 'text-slate-400'
                                 }`}>
-                                    {session.guest_name ? `${session.guest_name} • Session #${session.session_id}` : `Guest Session #${session.session_id}`}
+                                    {session.guest_name ? session.guest_name : `Session #${session.session_id}`}
                                 </span>
-                                <ChevronRight size={14} className={selectedSession?.session_id === session.session_id ? 'text-red-600' : 'text-zinc-800'} />
+                                <ChevronRight size={12} className={selectedSession?.session_id === session.session_id ? 'text-sky-500' : 'text-slate-800'} />
                             </div>
-                            <span className="text-[10px] font-bold text-zinc-600 mt-1 block">
-                                {formatDateTime(session.created_at)} • {session.message_count} Units
+                            <span className="text-[9px] font-bold text-slate-600 mt-1 block tracking-tight">
+                                {formatDateTime(session.created_at)} • {session.message_count} Events
                             </span>
-                            <span className="inline-block mt-2 px-2 py-1 text-[9px] uppercase tracking-widest font-black text-amber-300 bg-amber-900/30 border border-amber-700/30">
+                            <span className={`inline-block mt-2 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-black border ${
+                                session.status === 'reviewed' ? 'text-emerald-400 bg-emerald-500/5 border-emerald-500/10' : 'text-amber-400 bg-amber-500/5 border-amber-500/10'
+                            }`}>
                                 {(session.status || 'pending_review').replace('_', ' ')}
                             </span>
                         </button>

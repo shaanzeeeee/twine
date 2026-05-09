@@ -300,13 +300,13 @@ const ChatUI = () => {
       />
 
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between px-4 py-3 sm:px-6 sm:py-4 gap-4 md:gap-0 twine-glass-strong border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center md:rounded-2xl rounded-xl shadow-lg shadow-blue-500/20">
-            <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-white" />
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 bg-slate-900 border border-sky-500/20 flex items-center justify-center md:rounded-2xl rounded-xl shadow-lg shadow-sky-500/5">
+            <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg md:text-2xl font-extrabold tracking-tight text-white truncate">Twine</h1>
-            <p className="text-[9px] md:text-xs tracking-widest md:tracking-[0.25em] text-zinc-400 font-medium truncate">Persona Intelligence Engine</p>
+            <h1 className="text-lg md:text-2xl font-black tracking-tight text-white truncate">Twine</h1>
+            <p className="text-[9px] md:text-xs tracking-[0.25em] text-slate-500 font-black uppercase truncate">Persona Intelligence</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
@@ -343,9 +343,9 @@ const ChatUI = () => {
           <div className="flex flex-wrap gap-2 justify-end">
             <button
               onClick={resetChat}
-              className="flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-white bg-gradient-to-r from-blue-500 to-violet-600 border border-blue-500/30 rounded-xl hover:from-blue-600 hover:to-violet-700 transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-widest font-black text-white bg-sky-500 border border-sky-400/20 rounded-xl hover:bg-sky-600 transition-all shadow-lg shadow-sky-500/10"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={12} />
               New Chat
             </button>
             <button
@@ -450,8 +450,8 @@ const ChatUI = () => {
       <div className="relative z-10 flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-hide">
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-24 h-24 bg-white/[0.03] rounded-full flex items-center justify-center border border-white/[0.07]">
-              <Sparkles size={46} className="text-blue-500 animate-pulse" />
+            <div className="w-24 h-24 bg-slate-900 rounded-3xl flex items-center justify-center border border-sky-500/10 shadow-2xl">
+              <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain opacity-50" />
             </div>
             <div>
               <h2 className="text-3xl font-bold text-white">Welcome{guestName ? `, ${guestName}` : ''}</h2>
@@ -464,8 +464,8 @@ const ChatUI = () => {
           <div key={index} className={`flex ${group.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`relative max-w-[92%] sm:max-w-[80%] rounded-2xl px-4 py-3 sm:px-6 sm:py-5 shadow-lg transition-all duration-300 twine-fade-in ${
               group.role === 'user'
-                ? 'bg-gradient-to-br from-blue-600/90 to-blue-700/90 text-white border border-blue-500/20'
-                : 'bg-white/[0.04] text-zinc-100 border border-white/[0.07] backdrop-blur-sm'
+                ? 'bg-sky-500/90 text-white border border-sky-400/20'
+                : 'bg-slate-900/80 text-slate-100 border border-white/[0.05] backdrop-blur-sm'
             }`}>
               <div className={`mb-3 flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.35em] font-black ${group.role === 'user' ? 'text-red-100' : 'text-zinc-400'}`}>
                 <span>{group.role === 'user' ? 'You' : 'Assistant'}</span>
@@ -522,9 +522,9 @@ const ChatUI = () => {
           <button
             onClick={handleSend}
             disabled={isLoading || !isGuestReady || !input.trim()}
-            className="absolute right-2 top-2 bottom-2 sm:right-3 sm:top-3 sm:bottom-3 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 w-10 sm:w-auto sm:px-5 text-white hover:from-blue-600 hover:to-violet-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
+            className="absolute right-2 top-2 bottom-2 sm:right-3 sm:top-3 sm:bottom-3 inline-flex items-center justify-center rounded-xl bg-sky-500 w-10 sm:w-auto sm:px-5 text-white hover:bg-sky-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20"
           >
-            <Send size={18} />
+            <Send size={16} />
           </button>
         </div>
         <div className="max-w-6xl mx-auto mt-3 text-[9px] sm:text-[10px] text-zinc-500 uppercase tracking-widest sm:tracking-[0.35em] flex flex-wrap gap-x-2 gap-y-1 items-center justify-center sm:justify-start">
@@ -546,8 +546,8 @@ const ChatUI = () => {
         <div className="absolute inset-0 z-40 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-[#111119]/95 border border-white/[0.07] p-8 shadow-2xl rounded-2xl backdrop-blur-xl">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center rounded-2xl shadow-lg shadow-blue-500/20">
-                <User className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-slate-900 flex items-center justify-center rounded-2xl border border-sky-500/20 shadow-lg shadow-sky-500/5">
+                <User className="w-6 h-6 text-sky-400" />
               </div>
               <div>
                 <h3 className="text-xl font-extrabold tracking-tight text-white">Welcome to Twine</h3>
@@ -567,7 +567,7 @@ const ChatUI = () => {
             />
             <button
               onClick={beginGuestSession}
-              className="w-full px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-white bg-gradient-to-r from-blue-500 to-violet-600 rounded-xl hover:from-blue-600 hover:to-violet-700 transition-all duration-300"
+              className="w-full px-4 py-3 text-[11px] uppercase tracking-widest font-black text-white bg-sky-500 rounded-xl hover:bg-sky-600 transition-all duration-300 shadow-lg shadow-sky-500/10"
             >
               Start Guest Session
             </button>

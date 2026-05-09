@@ -48,12 +48,12 @@ const Login = () => {
             />
             <div className="relative z-10 w-full max-w-full sm:max-w-lg p-6 sm:p-10 space-y-8 bg-[#111119]/80 backdrop-blur-xl border border-white/[0.07] shadow-2xl rounded-2xl">
                 <div className="flex flex-col items-center gap-3 text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.25)]">
-                        <Sparkles className="w-10 h-10 text-white" />
+                    <div className="w-16 h-16 bg-slate-900 flex items-center justify-center rounded-2xl border border-sky-500/20 shadow-[0_0_40px_rgba(56,189,248,0.05)]">
+                        <img src="/logo.png" alt="Twine Logo" className="w-10 h-10 object-contain" />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-white">Twine</h2>
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-400 font-medium mt-2">Admin Portal</p>
+                        <h2 className="text-3xl font-black tracking-tight text-white">Twine</h2>
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-black mt-2">Admin Portal</p>
                     </div>
                 </div>
 
@@ -89,9 +89,9 @@ const Login = () => {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.25em] text-white transition-all hover:from-blue-600 hover:to-violet-700 active:translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
+                        className="w-full rounded-xl bg-sky-500 px-5 py-4 text-[11px] font-black uppercase tracking-[0.25em] text-white transition-all hover:bg-sky-600 active:translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-sky-500/10"
                     >
-                        {isSubmitting ? 'Signing in...' : 'Sign In'}
+                        {isSubmitting ? 'Verifying...' : 'Authenticate'}
                     </button>
                 </form>
 
@@ -100,11 +100,11 @@ const Login = () => {
                         type="button"
                         onClick={handleDemoLogin}
                         disabled={isSubmitting}
-                        className="w-full rounded-xl border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.25em] text-violet-200 transition-all hover:bg-violet-500/20 hover:border-violet-500/50 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full rounded-xl border border-sky-500/20 bg-sky-500/5 px-5 py-4 text-[11px] font-black uppercase tracking-[0.25em] text-sky-400 transition-all hover:bg-sky-500/10 hover:border-sky-500/40 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         <span className="inline-flex items-center justify-center gap-2">
-                            <Zap size={14} />
-                            Try Demo — Recruiter Access
+                            <Zap size={12} />
+                            Recruiter Demo Access
                         </span>
                     </button>
                     <button
