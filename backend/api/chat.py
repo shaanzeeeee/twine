@@ -70,9 +70,9 @@ async def chat_endpoint(request: ChatRequest, req: Request, db: Session = Depend
                 db.add(chat_session)
             else:
                 # Create a guest user to satisfy the DB constraint
-                guest_user = db.query(User).filter(User.email == "guest@lukabot.com").first()
+                guest_user = db.query(User).filter(User.email == "guest@twine.app").first()
                 if not guest_user:
-                    guest_user = User(email="guest@lukabot.com", hashed_password="nopassword", role="User")
+                    guest_user = User(email="guest@twine.app", hashed_password="nopassword", role="User")
                     db.add(guest_user)
                     db.commit()
                     db.refresh(guest_user)

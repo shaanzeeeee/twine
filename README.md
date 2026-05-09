@@ -1,146 +1,109 @@
-# LukaBot RAG System
+# Twine — Persona Intelligence Engine
 
-A production-ready Retrieval-Augmented Generation (RAG) chatbot system featuring real-time Google Drive synchronization, a FastAPI backend, and a modern React admin dashboard.
+A production-grade RAG chatbot that learns and mimics any persona from uploaded documents and knowledge bases. Built with FastAPI, React, ChromaDB, and Groq.
 
-## 🚀 Features
+## Features
 
-- **RAG Chat Interface**: Intelligent responses powered by OpenAI embeddings and custom knowledge base.
-- **Google Drive Sync**: Automatically index documents (PDF, DOCX) from a specific Google Drive folder.
-- **Admin Dashboard**: Manage chat transcripts, upvote/downvote responses, and curate the knowledge base.
-- **JWT Authentication**: Secure access for admin users.
-- **Persistence**: Hybrid storage using PostgreSQL for transcripts/users and ChromaDB for vector data.
+- **Configurable Persona** — Define any persona via environment variables (name, description, behavioral instructions)
+- **RAG Pipeline** — Retrieval-Augmented Generation using ChromaDB vector search + Groq LLM inference
+- **Knowledge Base Ingestion** — Upload PDF/DOCX/TXT files or sync from Google Drive
+- **Chat Interface** — Real-time conversational UI with session history, export, and regeneration
+- **Admin Dashboard** — Review transcripts, view analytics, manage uploads, and curate the knowledge base
+- **Demo Mode** — One-click recruiter demo login with read-only dashboard access
+- **Safety Filters** — Configurable content safety checks on all user inputs
 
----
+## Architecture
 
-## 🛠️ Tech Stack
-
-- **Backend**: Python 3.9+, FastAPI, SQLAlchemy, PostgreSQL, ChromaDB, OpenAI API.
-- **Frontend**: React 19, Vite, Tailwind CSS (v4), Axios, Lucide Icons.
-- **Cloud/Services**: Google Drive API, Google Cloud Console.
-
----
-
-## 📂 Project Structure
-
-```text
-├── backend/                # FastAPI application
-│   ├── api/                # API routes (auth, chat, admin)
-│   ├── core/               # Configuration and security settings
-│   ├── models/             # SQLAlchemy database models
-│   ├── services/           # Business logic (Drive sync, ChromaDB, Chat)
-│   └── main.py             # App entry point
-├── frontend/               # React application
-│   ├── src/
-│   │   ├── components/     # UI components
-│   │   ├── context/        # Auth state management
-│   │   ├── pages/          # Login and Admin views
-│   │   └── services/       # API integration
-│   └── vite.config.js
-├── scripts/                # Helper scripts (Drive setup, etc.)
-└── .gitignore              # Git exclusion rules
+```
+Frontend (React + Vite + Tailwind)  →  Backend (FastAPI)
+        ↓                                    ↓
+    Vercel                              Render (free tier)
+                                             ↓
+                                    ┌────────┼────────┐
+                                    │        │        │
+                                  Neon    ChromaDB   Groq
+                               (Postgres) (Vectors)  (LLM)
 ```
 
----
+## Tech Stack
 
-## ⚙️ Setup & Configuration
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Vite, Tailwind CSS |
+| Backend | FastAPI, SQLAlchemy, APScheduler |
+| LLM | Groq (Llama 3.3 70B) |
+| Vector DB | ChromaDB (embedded) |
+| Database | PostgreSQL (Neon free tier) |
+| Embeddings | OpenAI text-embedding-3-small |
+| Auth | JWT (python-jose + passlib) |
 
-### 1. Prerequisites
-- **Python 3.9+**
-- **Node.js 18+**
-- **PostgreSQL** instance
-- **Google Cloud Project** with Drive API enabled
+## Quick Start
 
-### 2. Backend Setup
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL database (or Neon free tier)
+- Groq API key ([console.groq.com](https://console.groq.com))
+- OpenAI API key (for embeddings)
+
+### Backend Setup
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+cp ../.env.example ../.env  # Edit with your credentials
+python -m uvicorn backend.main:app --reload
 ```
 
-### 3. Environment Variables
-Create a `.env` file in the root directory:
-```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/lukabot
-
-# Backend base URL for helper scripts (local or droplet)
-BACKEND_BASE_URL=http://127.0.0.1:8000
-
-# Vectors
-CHROMA_DB_DIR=./chroma_data
-
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Google Drive
-DRIVE_FOLDER_ID=your_google_drive_folder_id
-CREDENTIALS_FILE=credentials.json
-TOKEN_FILE=token.json
-
-# Security
-SECRET_KEY=your_secure_random_key
-```
-
-For a DigitalOcean droplet, set `BACKEND_BASE_URL` to your droplet address, for example:
-```env
-BACKEND_BASE_URL=http://YOUR_DROPLET_IP:8000
-```
-
-For the frontend dev proxy, set:
-```bash
-VITE_PROXY_TARGET=http://YOUR_DROPLET_IP:8000
-```
-
-For frontend API calls in non-proxied deployments, set:
-```bash
-VITE_API_URL=http://YOUR_DROPLET_IP:8000/api
-```
-
-### 4. DigitalOcean Droplet Deployment
-A helper deployment script is available at `scripts/deploy_droplet.sh`.
-
-1. Create a fresh Ubuntu droplet.
-2. Copy your repo onto the droplet or clone it from GitHub.
-3. Set these environment variables before running the deploy script:
-   - `REPO_URL` (Git clone URL)
-   - `DB_USER`, `DB_PASS`, `DB_NAME`
-   - `DOMAIN` (or `_` to use the droplet IP)
-
-Example:
-```bash
-sudo REPO_URL=git@github.com:your-org/lukarag.git DB_USER=lukabot DB_PASS=securepass DB_NAME=lukabot DOMAIN=example.com ./scripts/deploy_droplet.sh
-```
-
-4. After deployment, copy your Google Drive `credentials.json` into the repo root and update `.env`.
-5. Restart the app once `.env` is configured:
-```bash
-sudo systemctl restart lukabot.service
-```
-
-### 5. Google API Setup
-- Place your `credentials.json` from Google Cloud Console in the root.
-- Run `python scripts/setup_drive.py` to authorize and generate `token.json`.
-
-### 5. Frontend Setup
+### Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
----
+### Create Users
+```bash
+python backend/setup_admin.py
+```
+This creates:
+- **Admin**: `admin@twine.app` / `password123`
+- **Demo**: `demo@twine.app` / `demo123`
 
-## 🖥️ Usage
+## Persona Configuration
 
-### Running Locally
-1. Start the backend: `python backend/main.py`
-2. Start the frontend: `npm run dev`
-3. Setup Admin User: Run `python backend/setup_admin.py` while the server is running to create the default account (`admin@lukabot.com` / `password123`).
+Set these environment variables to define your persona:
 
----
+```env
+PERSONA_NAME=Alex Chen
+PERSONA_DESCRIPTION=A senior product manager with 10 years of experience in B2B SaaS. Known for sharp strategic thinking and data-driven decision making.
+PERSONA_INSTRUCTIONS=Be direct and structured. Ask clarifying questions before giving advice. Use frameworks when explaining complex topics.
+```
 
-## 🛡️ Security
-- All sensitive credentials are excluded via `.gitignore`.
-- JWT tokens expire every 30 minutes.
-- Password hashing is handled via `passlib[bcrypt]`.
+## Deployment
+
+### Frontend → Vercel
+1. Push the `frontend/` directory to a GitHub repo
+2. Connect to Vercel, set root directory to `frontend/`
+3. Set environment variable: `VITE_API_URL=https://your-backend.onrender.com/api`
+4. Deploy
+
+### Backend → Render
+1. Push the project to GitHub
+2. Create a new Web Service on Render
+3. Set root directory to `backend/`, build command: `pip install -r requirements.txt`
+4. Start command: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+5. Add all `.env` variables in Render's Environment settings
+6. Set `FRONTEND_URL` to your Vercel frontend URL
+
+### Database → Neon
+1. Create a free PostgreSQL database at [neon.tech](https://neon.tech)
+2. Copy the connection string to `DATABASE_URL`
+
+### Keep Backend Warm
+Use [cron-job.org](https://cron-job.org) to ping `https://your-backend.onrender.com/api/health` every 14 minutes to prevent Render free-tier cold starts.
+
+## License
+
+MIT

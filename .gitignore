@@ -21,6 +21,7 @@ out/
 
 # Data & Secrets
 chroma_data/
+backend/uploads/
 token.json
 credentials.json
 *.log

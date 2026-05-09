@@ -17,7 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from backend.core.config import settings
 from backend.models.sql_models import Base
 from backend.api import chat, auth, admin
-from backend.api.zulip import router as zulip_router
+from backend.api.upload import router as upload_router
 from backend.services.drive_sync import sync_drive_to_chroma
 from backend.core.database import engine
 
@@ -65,10 +65,21 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan, root_path="/api")
 
-# CORS
+# CORS — allow the frontend origin in production
+allowed_origins = [
+    settings.FRONTEND_URL,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+# Also allow any Vercel preview URLs
+if settings.FRONTEND_URL and "vercel.app" in settings.FRONTEND_URL:
+    allowed_origins.append("https://*.vercel.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,7 +88,7 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(auth.router)
 app.include_router(admin.router)
-app.include_router(zulip_router)
+app.include_router(upload_router)
 
 @app.get("/health")
 def health_check():

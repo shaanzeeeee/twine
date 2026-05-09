@@ -878,7 +878,7 @@ def upvote_message(message_id: int, db: Session = Depends(get_db), current_user:
     
     # Store in ChromaDB
     chroma_service.add_documents(
-        collection_name="lukabot_gold",
+        collection_name="twine_gold",
         documents=[combined_text],
         metadatas=[{"type": "gold_standard", "original_q": user_msg.content}],
         ids=[f"gold_{assistant_msg.id}"]
@@ -914,7 +914,7 @@ def add_session_to_database(
         raise HTTPException(status_code=400, detail="No valid user/assistant pairs found in session")
 
     chroma_service.add_documents(
-        collection_name="lukabot_gold",
+        collection_name="twine_gold",
         documents=documents,
         metadatas=metadatas,
         ids=ids,

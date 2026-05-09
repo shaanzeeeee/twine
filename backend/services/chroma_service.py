@@ -10,15 +10,15 @@ class ChromaService:
             model_name="text-embedding-3-small"
         )
         
-        # Collection for standard Knowledge Base (from Google Drive)
+        # Collection for standard Knowledge Base (from Google Drive + uploads)
         self.kb_collection = self.client.get_or_create_collection(
-            name="lukabot_kb",
+            name="twine_kb",
             embedding_function=self.embedding_function
         )
         
         # Collection for "Gold Standard" upvoted transcripts
         self.gold_collection = self.client.get_or_create_collection(
-            name="lukabot_gold",
+            name="twine_gold",
             embedding_function=self.embedding_function
         )
 
@@ -46,5 +46,13 @@ class ChromaService:
             "gold": gold_results,
             "kb": kb_results
         }
+
+    def add_to_kb(self, ids: list[str], documents: list[str], metadatas: list[dict] = None):
+        """Add documents directly to the knowledge base collection."""
+        self.kb_collection.upsert(
+            documents=documents,
+            metadatas=metadatas or [{} for _ in documents],
+            ids=ids
+        )
 
 chroma_service = ChromaService()

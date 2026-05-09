@@ -19,6 +19,7 @@ class Token(BaseModel):
 class UserCreate(BaseModel):
     email: str
     password: str
+    role: str = "Admin"
 
 @router.post("/setup-admin")
 def setup_admin(user: UserCreate, db: Session = Depends(get_db)):
@@ -27,12 +28,14 @@ def setup_admin(user: UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
     
+    allowed_roles = {"Admin", "Demo"}
+    role = user.role if user.role in allowed_roles else "Admin"
     hashed_password = get_password_hash(user.password)
-    db_user = User(email=user.email, hashed_password=hashed_password, role="Admin")
+    db_user = User(email=user.email, hashed_password=hashed_password, role=role)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return {"message": "Admin user created successfully"}
+    return {"message": f"{role} user created successfully"}
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):

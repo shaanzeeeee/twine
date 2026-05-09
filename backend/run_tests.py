@@ -84,7 +84,7 @@ def run_test(prompt):
         return {"prompt": prompt, "status": "ERROR", "error": str(e)}
 
 def main():
-    print(f"Starting 100 test cases for LukaBot...")
+    print(f"Starting 100 test cases for Twine...")
     results = []
     
     # Using ThreadPool to speed up testing

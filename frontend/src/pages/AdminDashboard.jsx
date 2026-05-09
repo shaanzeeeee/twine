@@ -5,7 +5,7 @@ import {
     MessageSquare,
     ArrowLeft,
     LogOut,
-    Shield,
+    Sparkles,
     ChevronRight,
     Database,
     Trash2,
@@ -16,6 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const AdminAnalytics = lazy(() => import('../components/AdminAnalytics'));
+const FileUpload = lazy(() => import('../components/FileUpload'));
 
 const AdminDashboard = () => {
     const [sessions, setSessions] = useState([]);
@@ -267,7 +268,7 @@ const AdminDashboard = () => {
     if (loading) return loadingSkeleton;
 
     return (
-        <div className="flex h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden">
+        <div className="flex h-screen bg-[#09090F] text-white font-sans overflow-hidden">
             {sidebarOpen && (
                 <button
                     type="button"
@@ -282,11 +283,11 @@ const AdminDashboard = () => {
                 data-testid="admin-sidebar"
                 className={`fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
             >
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/40">
+                <div className="p-6 border-b border-white/[0.05] flex justify-between items-center bg-[#0D0D15]">
                     <div className="flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-red-600" />
-                        <h2 className="text-xs font-black uppercase tracking-widest text-gray-100">
-                           Intelligence Logs
+                        <Sparkles className="w-5 h-5 text-blue-400" />
+                        <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-gray-100">
+                           Twine Dashboard
                         </h2>
                     </div>
                     <div className="flex items-center gap-2">
@@ -299,7 +300,7 @@ const AdminDashboard = () => {
                         >
                             <Menu className="w-4 h-4 rotate-180" />
                         </button>
-                        <button onClick={handleLogout} className="text-gray-500 hover:text-red-600 transition" title="Logout">
+                        <button onClick={handleLogout} className="text-gray-500 hover:text-blue-400 transition" title="Logout">
                             <LogOut className="w-4 h-4" />
                         </button>
                     </div>
@@ -311,7 +312,7 @@ const AdminDashboard = () => {
                                 setViewMode('transcripts');
                                 closeSidebar();
                             }}
-                            className={`px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${viewMode === 'transcripts' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
+                            className={`px-3 py-2 text-xs font-bold uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'transcripts' ? 'bg-blue-500/15 text-blue-200 border-blue-500/30' : 'bg-white/[0.03] text-zinc-100 border-white/[0.07] hover:border-blue-500/40'}`}
                         >
                             Transcripts
                         </button>
@@ -320,17 +321,26 @@ const AdminDashboard = () => {
                                 setViewMode('analytics');
                                 closeSidebar();
                             }}
-                            className={`px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${viewMode === 'analytics' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
+                            className={`px-3 py-2 text-xs font-bold uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'analytics' ? 'bg-blue-500/15 text-blue-200 border-blue-500/30' : 'bg-white/[0.03] text-zinc-100 border-white/[0.07] hover:border-blue-500/40'}`}
                         >
                             Analytics
                         </button>
                     </div>
                     <button
                         onClick={() => {
+                            setViewMode('uploads');
+                            closeSidebar();
+                        }}
+                        className={`w-full px-3 py-2 text-xs font-bold uppercase tracking-widest border rounded-lg transition-all ${viewMode === 'uploads' ? 'bg-violet-500/15 text-violet-200 border-violet-500/30' : 'bg-white/[0.03] text-zinc-100 border-white/[0.07] hover:border-violet-500/40'}`}
+                    >
+                        📄 Upload Documents
+                    </button>
+                    <button
+                        onClick={() => {
                             setShowArchived((prev) => !prev);
                             closeSidebar();
                         }}
-                        className={`w-full px-3 py-2 text-xs font-black uppercase tracking-widest border transition-all ${showArchived ? 'bg-amber-900/30 text-amber-200 border-amber-700/40' : 'bg-zinc-900 text-zinc-100 border-white/10 hover:border-red-600'}`}
+                        className={`w-full px-3 py-2 text-xs font-bold uppercase tracking-widest border rounded-lg transition-all ${showArchived ? 'bg-amber-900/30 text-amber-200 border-amber-700/40' : 'bg-white/[0.03] text-zinc-100 border-white/[0.07] hover:border-blue-500/40'}`}
                     >
                         {showArchived ? 'Viewing Archive' : 'Viewing Active Sessions'}
                     </button>
@@ -339,13 +349,13 @@ const AdminDashboard = () => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search session id or content"
-                        className="w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"
+                        className="w-full px-3 py-2 text-xs bg-white/[0.03] border border-white/[0.07] rounded-lg focus:border-blue-500/60 outline-none"
                         disabled={viewMode !== 'transcripts'}
                     />
                     <select
                         value={minMessages}
                         onChange={(e) => setMinMessages(Number(e.target.value))}
-                        className="w-full px-3 py-2 text-xs bg-zinc-900 border border-white/10 focus:border-red-600 outline-none"
+                        className="w-full px-3 py-2 text-xs bg-white/[0.03] border border-white/[0.07] rounded-lg focus:border-blue-500/60 outline-none"
                         disabled={viewMode !== 'transcripts'}
                     >
                         <option value={0}>All sessions</option>
@@ -421,7 +431,7 @@ const AdminDashboard = () => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full bg-[#0a0a0a] relative min-w-0">
-                 <div className="absolute inset-0 opacity-5 bg-[url('/gym-bg.png')] bg-cover bg-center grayscale pointer-events-none" />
+                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{background: 'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.15) 0%, transparent 60%)'}} />
                  {syncStatus !== 'idle' && (
                      <div className={`relative z-20 mx-4 mt-4 sm:mx-8 px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest ${syncStatus === 'success' ? 'bg-emerald-900/40 text-emerald-200 border-emerald-700/40' : syncStatus === 'error' ? 'bg-red-900/40 text-red-200 border-red-700/40' : 'bg-zinc-900/90 text-zinc-100 border-white/10'}`}>
                          {syncMessage}
@@ -448,7 +458,7 @@ const AdminDashboard = () => {
                          <button
                              onClick={handleDriveSync}
                              disabled={isSyncing}
-                             className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-white bg-red-600 border border-red-600 rounded-2xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                             className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white bg-gradient-to-r from-blue-500 to-violet-600 border border-blue-500/30 rounded-xl hover:from-blue-600 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                          >
                              <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
                              Ingest
@@ -459,7 +469,7 @@ const AdminDashboard = () => {
                 <div className="relative z-10 hidden md:flex items-center justify-end gap-2 px-8 py-3 border-b border-white/5 bg-black/20 backdrop-blur-xl shrink-0">
                     <button
                         onClick={handleChatAsGuest}
-                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-100 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-blue-500/40 transition-all"
                     >
                         <MessageSquare className="w-3 h-3" />
                         Chat as Guest
@@ -474,12 +484,16 @@ const AdminDashboard = () => {
                     </button>
                 </div>
 
-                {viewMode === 'analytics' ? (
+                {viewMode === 'uploads' ? (
+                    <Suspense fallback={<div className="p-6 text-zinc-400">Loading...</div>}>
+                        <FileUpload />
+                    </Suspense>
+                ) : viewMode === 'analytics' ? (
                     <Suspense
                         fallback={
                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                                 {Array.from({ length: 8 }).map((_, idx) => (
-                                    <div key={idx} className="h-24 bg-zinc-900/60 border border-white/10 animate-pulse" />
+                                    <div key={idx} className="h-24 bg-zinc-900/60 border border-white/[0.07] animate-pulse rounded-xl" />
                                 ))}
                             </div>
                         }
@@ -490,7 +504,7 @@ const AdminDashboard = () => {
                     <>
                         <div className="relative z-10 h-auto py-3 sm:py-0 sm:h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center px-4 sm:px-8 justify-between shrink-0 gap-3 sm:gap-0">
                             <div className="truncate w-full sm:w-auto">
-                                <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white italic truncate">KingsBox Intelligence Report</h3>
+                                <h3 className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-white truncate">Twine Session Report</h3>
                                 <p className="text-[9px] sm:text-[10px] text-zinc-500 font-bold truncate">
                                     {selectedSession.guest_name ? `Guest: ${selectedSession.guest_name}` : 'Guest: Anonymous'} • Session ID: {selectedSession.session_id}
                                 </p>
@@ -498,7 +512,7 @@ const AdminDashboard = () => {
                             <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={exportSession}
-                                    className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                                    className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-100 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-blue-500/40 transition-all"
                                 >
                                     <Download className="w-3 h-3" />
                                     Export
@@ -506,7 +520,7 @@ const AdminDashboard = () => {
                                 {showArchived ? (
                                     <button
                                         onClick={handleRestoreSession}
-                                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                                        className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-100 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-blue-500/40 transition-all"
                                     >
                                         <Database className="w-3 h-3" />
                                         Restore Session
@@ -515,14 +529,14 @@ const AdminDashboard = () => {
                                     <>
                                         <button
                                             onClick={handleAddSessionToDatabase}
-                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-100 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-blue-500/40 transition-all"
                                         >
                                             <Database className="w-3 h-3" />
                                             Add to Database
                                         </button>
                                         <button
                                             onClick={() => setShowDiscardConfirm(true)}
-                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-100 bg-zinc-900 border border-white/10 rounded-2xl hover:border-red-600 transition-all"
+                                            className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-zinc-100 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-blue-500/40 transition-all"
                                         >
                                             <Trash2 className="w-3 h-3" />
                                             Discard
@@ -562,10 +576,10 @@ const AdminDashboard = () => {
                 ) : (
                     <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-zinc-800">
                         <MessageSquare className="w-16 h-16 mb-4 opacity-10" />
-                        <p className="text-[10px] uppercase font-black tracking-[0.3em]">Standby for Data Selection</p>
+                        <p className="text-[10px] uppercase font-bold tracking-[0.25em]">Select a session to review</p>
                         <button
                             onClick={() => navigate('/')}
-                            className="mt-5 px-4 py-2 text-[10px] uppercase tracking-widest font-black text-zinc-200 bg-zinc-900 border border-white/10 hover:border-red-600 transition-all"
+                            className="mt-5 px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-zinc-200 bg-white/[0.03] border border-white/[0.07] rounded-xl hover:border-blue-500/40 transition-all"
                         >
                             Go To Chat
                         </button>
@@ -575,10 +589,10 @@ const AdminDashboard = () => {
             
             <button 
                 onClick={() => navigate('/')} 
-                className="absolute bottom-10 right-10 w-14 h-14 bg-red-600 flex items-center justify-center shadow-[0_0_30px_rgba(227,30,36,0.3)] text-white transition-all hover:scale-110 active:scale-95 z-30 rotate-45 group hover:rotate-0"
+                className="absolute bottom-10 right-10 w-14 h-14 bg-gradient-to-br from-blue-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 text-white transition-all hover:scale-110 active:scale-95 z-30"
                 title="Go to Chat"
             >
-                <ArrowLeft className="w-6 h-6 -rotate-45 group-hover:rotate-0" />
+                <ArrowLeft className="w-6 h-6" />
             </button>
 
             {showDiscardConfirm && selectedSession && (

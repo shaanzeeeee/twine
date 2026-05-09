@@ -3,6 +3,7 @@ uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 chromadb
+groq
 openai
 apscheduler
 google-api-python-client
@@ -14,6 +15,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 pydantic
+pydantic-settings
 alembic
 requests
 pytest

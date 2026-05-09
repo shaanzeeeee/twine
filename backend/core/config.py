@@ -3,17 +3,27 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "LukaBot"
+    PROJECT_NAME: str = "Twine"
     
     # Database (PostgreSQL)
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/lukabot")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/twine")
     
     # ChromaDB
     CHROMA_DB_DIR: str = os.getenv("CHROMA_DB_DIR", "./chroma_data")
     
-    # OpenAI
+    # Groq (LLM Provider)
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    LLM_CHAT_MODEL: str = os.getenv("LLM_CHAT_MODEL", "llama-3.3-70b-versatile")
+    LLM_SAFETY_MODEL: str = os.getenv("LLM_SAFETY_MODEL", "llama-3.1-8b-instant")
+    
+    # Legacy OpenAI support (for embeddings in ChromaDB)
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     CHROMA_OPENAI_API_KEY: str = os.getenv("CHROMA_OPENAI_API_KEY", "")
+    
+    # Persona Configuration
+    PERSONA_NAME: str = os.getenv("PERSONA_NAME", "Twine Assistant")
+    PERSONA_DESCRIPTION: str = os.getenv("PERSONA_DESCRIPTION", "A knowledgeable AI persona that responds based on the uploaded knowledge base.")
+    PERSONA_INSTRUCTIONS: str = os.getenv("PERSONA_INSTRUCTIONS", "Be helpful, concise, and accurate. Always ground your answers in the provided context.")
     
     # Security Context
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-for-development-change-in-prod")
@@ -25,10 +35,8 @@ class Settings(BaseSettings):
     CREDENTIALS_FILE: str = os.getenv("CREDENTIALS_FILE", "credentials.json")
     TOKEN_FILE: str = os.getenv("TOKEN_FILE", "token.json")
 
-    # Zulip integration
-    ZULIP_SITE_URL: str = os.getenv("ZULIP_SITE_URL", "")
-    ZULIP_BOT_EMAIL: str = os.getenv("ZULIP_BOT_EMAIL", "")
-    ZULIP_API_KEY: str = os.getenv("ZULIP_API_KEY", "")
+    # CORS — frontend URL for production
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
     class Config:
         env_file = str(Path(__file__).resolve().parents[1] / ".env")

@@ -29,7 +29,7 @@ describe('Login page', () => {
       </AuthContext.Provider>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('admin@lukabot.com'), { target: { value: 'admin@example.com' } });
+    fireEvent.change(screen.getByPlaceholderText('admin@twine.app'), { target: { value: 'admin@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('• • • • • • • •'), { target: { value: 'bad-password' } });
     fireEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
 
