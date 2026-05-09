@@ -67,6 +67,20 @@ Twine is designed for high-availability cloud deployment:
 - **Backend**: Hosted on **Render** (Production-grade instances).
 - **Database**: **Neon PostgreSQL** (Serverless scaling).
 - **Environment**: Managed via centralized `.env` configuration.
+- **Automated Intelligence Sync**: Configured via Render Cron Jobs.
+
+---
+
+## 6. Automated Intelligence Sync (Cron)
+
+To keep the Persona knowledge base fresh without relying on web server uptime, Twine uses a standalone sync script.
+
+### Setup on Render:
+1. Create a **New > Cron Job** in the Render Dashboard.
+2. **Environment**: `Python`
+3. **Command**: `python scripts/cron_sync.py`
+4. **Schedule**: `0 * * * *` (Every hour, or as desired).
+5. Ensure all `.env` variables are added to the Cron Job's environment.
 
 ---
 
