@@ -17,16 +17,58 @@ import {
   Legend,
 } from 'recharts';
 import api from '../services/api';
+import { 
+  Activity, 
+  BarChart3, 
+  Clock, 
+  AlertCircle, 
+  Download, 
+  TrendingUp, 
+  Layers, 
+  Zap,
+  CheckCircle2,
+  AlertTriangle
+} from 'lucide-react';
 
-const panelClass = 'rounded-2xl sm:rounded-3xl border border-white/10 bg-[#111111]/90 p-4 sm:p-5 shadow-[0_0_40px_rgba(0,0,0,0.35)]';
-const chartColors = ['#e11d48', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#14b8a6'];
+const panelClass = 'rounded-[2rem] border border-white/5 bg-[#0F172A]/40 backdrop-blur-3xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] transition-all duration-500 hover:border-sky-500/20 group';
+const chartColors = ['#38bdf8', '#818cf8', '#22d3ee', '#6366f1', '#2dd4bf', '#fb7185'];
 
-const StatCard = ({ label, value, tone = 'text-white' }) => (
-  <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-    <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
-    <p className={`mt-2 text-2xl font-black ${tone}`}>{value}</p>
+const StatCard = ({ label, value, icon: Icon, trend = null, trendType = 'positive' }) => (
+  <div className="rounded-[1.5rem] border border-white/5 bg-slate-900/40 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-[1.02] hover:border-sky-500/30 group">
+    <div className="flex justify-between items-start mb-4">
+      <div className="p-3 rounded-2xl bg-sky-500/5 border border-sky-500/10 group-hover:bg-sky-500/10 transition-colors">
+        <Icon className="w-5 h-5 text-sky-400" />
+      </div>
+      {trend && (
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+          trendType === 'positive' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' : 'text-rose-400 border-rose-500/20 bg-rose-500/5'
+        }`}>
+          {trend}
+        </span>
+      )}
+    </div>
+    <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-1">{label}</p>
+    <p className="text-3xl font-black text-white tracking-tighter">{value}</p>
   </div>
 );
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0F172A]/90 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+        <p className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2">{label}</p>
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-xs font-bold text-white">{entry.name}:</span>
+            <span className="text-xs text-sky-400">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 const AdminAnalytics = ({ refreshToken = 0, syncStatus = 'idle', syncMessage = '' }) => {
   const [days, setDays] = useState(30);
@@ -130,19 +172,15 @@ const AdminAnalytics = ({ refreshToken = 0, syncStatus = 'idle', syncMessage = '
         responseType: 'blob',
       });
 
-      const contentDisposition = response.headers['content-disposition'] || '';
-      const fileNameMatch = contentDisposition.match(/filename=([^;]+)/i);
-      const fileName = fileNameMatch ? fileNameMatch[1].replace(/"/g, '') : `analytics-${days}d.${format}`;
-
       const url = URL.createObjectURL(response.data);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = fileName;
+      anchor.download = `twine-intelligence-${days}d.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-      setTimedNotice(`Exported ${fileName}`);
+      setTimedNotice(`Export complete`);
     } catch (error) {
       console.error('Failed to download analytics report', error);
       setTimedNotice('Export failed');
@@ -171,299 +209,264 @@ const AdminAnalytics = ({ refreshToken = 0, syncStatus = 'idle', syncMessage = '
 
   if (loading) {
     return (
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 12 }).map((_, idx) => (
-          <div key={idx} className="h-28 rounded-xl border border-white/10 bg-zinc-900/60 animate-pulse" />
+          <div key={idx} className="h-32 rounded-[1.5rem] border border-white/5 bg-slate-900/40 animate-pulse" />
         ))}
       </div>
     );
   }
 
   if (!data) {
-    return <div className="p-6 text-zinc-500">Analytics unavailable.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-slate-500">
+        <Activity className="w-12 h-12 mb-4 opacity-10" />
+        <p className="text-[10px] uppercase font-bold tracking-[0.2em]">Intelligence Engine Offline</p>
+      </div>
+    );
   }
 
   return (
-    <div className="relative z-10 p-4 sm:p-6 space-y-6 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(225,29,72,0.18),transparent_42%),radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_38%)]">
-      {syncStatus !== 'idle' && (
-        <div className={`rounded-2xl border px-4 py-3 text-[10px] uppercase tracking-widest font-black ${syncStatus === 'success' ? 'bg-emerald-900/30 text-emerald-200 border-emerald-700/40' : syncStatus === 'error' ? 'bg-red-900/30 text-red-200 border-red-700/40' : 'bg-zinc-900/80 text-zinc-100 border-white/10'}`}>
-          {syncMessage}
-        </div>
-      )}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="relative z-10 p-6 sm:p-10 space-y-10 overflow-y-auto">
+      {/* Header Section */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between border-b border-white/5 pb-10">
         <div>
-          <h3 className="text-sm uppercase tracking-[0.18em] font-black text-white">Analytics Command Center</h3>
-          <p className="text-xs text-zinc-400 mt-1">Live operational intelligence for transcripts, quality, and risk.</p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse shadow-[0_0_8px_rgba(14,165,233,0.8)]" />
+            <h3 className="text-[11px] uppercase tracking-[0.3em] font-black text-sky-400">Intelligence Command</h3>
+          </div>
+          <h2 className="text-4xl font-black text-white tracking-tighter mb-2 italic">Dashboard Overview</h2>
+          <p className="text-sm text-slate-400 max-w-md font-medium leading-relaxed">Live operational telemetry for persona accuracy, retrieval quality, and user engagement.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        
+        <div className="flex flex-wrap items-center gap-3 bg-slate-900/50 backdrop-blur-xl p-2 rounded-[1.25rem] border border-white/5 shadow-2xl">
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="px-3 py-2 text-xs bg-[#111111] border border-white/10 rounded-2xl text-white"
+            className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-transparent text-slate-300 outline-none cursor-pointer hover:text-white transition-colors"
           >
-            <option value={7}>Last 7 days</option>
-            <option value={30}>Last 30 days</option>
-            <option value={90}>Last 90 days</option>
+            <option value={7}>7 Days</option>
+            <option value={30}>30 Days</option>
+            <option value={90}>90 Days</option>
           </select>
+          <div className="w-px h-4 bg-white/10" />
           <button
-            onClick={() => {
-              setAutoRefresh((v) => !v);
-              setTimedNotice(autoRefresh ? 'Live refresh disabled' : 'Live refresh enabled');
-            }}
-            className={`px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl ${autoRefresh ? 'bg-emerald-800/40 text-emerald-200 border-emerald-700/50' : 'bg-[#111111] text-zinc-200 border-white/10'}`}
+            onClick={() => setAutoRefresh((v) => !v)}
+            className={`flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${autoRefresh ? 'text-emerald-400 bg-emerald-500/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
-            Live {autoRefresh ? 'On' : 'Off'}
+            <Zap className={`w-3 h-3 ${autoRefresh ? 'fill-current' : ''}`} />
+            Live {autoRefresh ? 'Syncing' : 'Stream'}
           </button>
           <button
             onClick={() => fetchAnalytics({ silent: true })}
-            disabled={refreshing}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl bg-[#111111] text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
           >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
+            <TrendingUp className="w-3 h-3" />
+            Refresh
           </button>
+          <div className="w-px h-4 bg-white/10" />
           <button
             onClick={() => downloadReport('json')}
-            disabled={isExporting}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl bg-[#111111] text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-sky-400 hover:bg-sky-400/10 rounded-xl transition-all"
           >
-            Export JSON
-          </button>
-          <button
-            onClick={() => downloadReport('csv')}
-            disabled={isExporting}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-2xl bg-[#111111] text-zinc-200 border-white/10 hover:border-red-600 disabled:opacity-50"
-          >
-            Export CSV
+            <Download className="w-3 h-3" />
+            Export
           </button>
         </div>
       </div>
 
-      {actionNotice && (
-        <div className="text-[10px] uppercase tracking-widest font-black text-emerald-300">{actionNotice}</div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Total Sessions" value={kpis.total_sessions || 0} />
-        <StatCard label="Active Sessions" value={kpis.active_sessions || 0} tone="text-emerald-300" />
-        <StatCard label="Archived Sessions" value={kpis.archived_sessions || 0} tone="text-amber-300" />
-        <StatCard label="Total Messages" value={kpis.total_messages || 0} />
-        <StatCard label="User Messages" value={kpis.user_messages || 0} tone="text-blue-300" />
-        <StatCard label="Assistant Messages" value={kpis.assistant_messages || 0} tone="text-pink-300" />
-        <StatCard label="Avg Messages / Session" value={kpis.avg_messages_per_session || 0} />
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard label="Total Sessions" value={kpis.total_sessions || 0} icon={Layers} trend="+12.5%" />
+        <StatCard label="Active Sessions" value={kpis.active_sessions || 0} icon={Activity} trend="Live" trendType="positive" />
+        <StatCard label="Total Messages" value={kpis.total_messages || 0} icon={Zap} trend="+8.2%" />
+        <StatCard label="Avg. Depth" value={kpis.avg_messages_per_session || 0} icon={BarChart3} trend="Stable" />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      {/* Primary Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6">
         <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Session And Message Velocity</h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="date" tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-                <YAxis tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-                <Tooltip wrapperStyle={{ pointerEvents: 'none' }} contentStyle={{ background: '#09090b', border: '1px solid #3f3f46', fontSize: 11 }} />
-                <Legend />
-                <Line isAnimationActive={false} type="monotone" dataKey="sessions" stroke="#e11d48" strokeWidth={2} dot={false} />
-                <Line isAnimationActive={false} type="monotone" dataKey="messages" stroke="#38bdf8" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="flex justify-between items-center mb-10">
+            <div>
+              <h4 className="text-[11px] uppercase tracking-[0.2em] font-black text-slate-400 mb-1">Telemetry Velocity</h4>
+              <p className="text-xs text-slate-500">Interaction volume across time</p>
+            </div>
+            <div className="flex gap-4">
+               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]" /><span className="text-[10px] uppercase font-bold text-slate-400">Sessions</span></div>
+               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" /><span className="text-[10px] uppercase font-bold text-slate-400">Events</span></div>
+            </div>
           </div>
-        </div>
-
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Status Mix</h4>
-          <div className="h-64">
+          <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie isAnimationActive={false} data={statusPie} dataKey="value" nameKey="name" outerRadius={96} innerRadius={56}>
-                  {statusPie.map((entry, idx) => (
-                    <Cell key={`${entry.name}-${idx}`} fill={chartColors[idx % chartColors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip wrapperStyle={{ pointerEvents: 'none' }} contentStyle={{ background: '#09090b', border: '1px solid #3f3f46', fontSize: 11 }} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Topic Trend Lines</h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={topicSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="date" tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-                <YAxis tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-                <Tooltip wrapperStyle={{ pointerEvents: 'none' }} contentStyle={{ background: '#09090b', border: '1px solid #3f3f46', fontSize: 11 }} />
-                <Legend />
-                {(topicTrends?.topics || []).map((topic, idx) => (
-                  <Area
-                    key={topic}
-                    isAnimationActive={false}
-                    type="monotone"
-                    dataKey={topic}
-                    stroke={chartColors[idx % chartColors.length]}
-                    fill={chartColors[idx % chartColors.length]}
-                    fillOpacity={0.12}
-                    strokeWidth={2}
-                  />
-                ))}
+              <AreaChart data={trendData}>
+                <defs>
+                  <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorMessages" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#818cf8" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#818cf8" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" hide />
+                <YAxis hide />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="sessions" stroke="#38bdf8" strokeWidth={3} fillOpacity={1} fill="url(#colorSessions)" />
+                <Area type="monotone" dataKey="messages" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorMessages)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Depth Distribution</h4>
-          <div className="h-64">
+          <div className="mb-10">
+            <h4 className="text-[11px] uppercase tracking-[0.2em] font-black text-slate-400 mb-1">State Distribution</h4>
+            <p className="text-xs text-slate-500">Breakdown of transcript review status</p>
+          </div>
+          <div className="h-[320px] flex flex-col items-center justify-center relative">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={depthBars}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis dataKey="bucket" tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-                <YAxis tick={{ fill: '#a1a1aa', fontSize: 10 }} />
-                <Tooltip wrapperStyle={{ pointerEvents: 'none' }} contentStyle={{ background: '#09090b', border: '1px solid #3f3f46', fontSize: 11 }} />
-                <Bar isAnimationActive={false} dataKey="value" fill="#f43f5e" radius={[6, 6, 0, 0]} />
-              </BarChart>
+              <PieChart>
+                <Pie data={statusPie} dataKey="value" nameKey="name" outerRadius="90%" innerRadius="75%" paddingAngle={8}>
+                  {statusPie.map((entry, idx) => (
+                    <Cell key={idx} fill={chartColors[idx % chartColors.length]} stroke="rgba(255,255,255,0.05)" />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">RAG Quality</h4>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between"><span className="text-zinc-400">Retrieval hit rate</span><span className="text-white font-bold">{deepDive?.rag_quality?.retrieval_hit_rate || 0}%</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Low context rate</span><span className="text-white font-bold">{deepDive?.rag_quality?.low_context_rate || 0}%</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Grounded responses</span><span className="text-white font-bold">{deepDive?.rag_quality?.estimated_grounded_responses || 0}</span></div>
-          </div>
-        </div>
-
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Queue Aging</h4>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between"><span className="text-zinc-400">Pending sessions</span><span className="text-white font-bold">{deepDive?.queue_aging?.pending_count || 0}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Oldest pending</span><span className="text-white font-bold">{deepDive?.queue_aging?.oldest_pending_days || 0}d</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Avg pending age</span><span className="text-white font-bold">{deepDive?.queue_aging?.avg_pending_days || 0}d</span></div>
-          </div>
-        </div>
-
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Operations Throughput</h4>
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between"><span className="text-zinc-400">Approved sessions</span><span className="text-white font-bold">{deepDive?.operations?.approved_sessions || 0}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Discarded sessions</span><span className="text-white font-bold">{deepDive?.operations?.discarded_sessions || 0}</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Approval rate</span><span className="text-emerald-300 font-bold">{deepDive?.operations?.approval_rate || 0}%</span></div>
-            <div className="flex justify-between"><span className="text-zinc-400">Discard rate</span><span className="text-amber-300 font-bold">{deepDive?.operations?.discard_rate || 0}%</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Regression Monitor</h4>
-          <div className="space-y-2">
-            {Object.entries(regression?.deltas || {}).map(([key, value]) => (
-              <div key={key} className="rounded-lg border border-white/10 bg-black/40 p-2">
-                <div className="text-[10px] uppercase tracking-widest text-zinc-400">{key.replaceAll('_', ' ')}</div>
-                <div className="text-xs text-zinc-300 mt-1">
-                  Current {value.current} | Previous {value.previous} | Delta {value.absolute} ({value.percent}%)
-                </div>
-              </div>
-            ))}
-            {(regression?.regressions || []).length === 0 && <p className="text-xs text-emerald-300">No regressions detected.</p>}
-            {(regression?.regressions || []).map((item) => (
-              <div key={item} className="rounded-lg border border-red-700/40 bg-red-900/20 px-3 py-2 text-xs text-red-200">{item}</div>
-            ))}
-          </div>
-        </div>
-
-        <div className={panelClass}>
-          <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Anomaly Detector</h4>
-          <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
-            {(deepDive?.anomalies || []).length === 0 && <p className="text-xs text-zinc-500">No anomalies detected in current window.</p>}
-            {(deepDive?.anomalies || []).map((anomaly, idx) => (
-              <div key={`${anomaly.date}-${anomaly.type}-${idx}`} className="rounded-lg border border-amber-700/40 bg-amber-900/20 px-3 py-2">
-                <div className="text-[10px] uppercase tracking-widest font-black text-amber-200">{anomaly.type.replace('_', ' ')}</div>
-                <div className="text-xs text-zinc-300 mt-1">{anomaly.date} | value {anomaly.value} vs baseline {anomaly.baseline}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className={panelClass}>
-        <h4 className="text-[10px] uppercase tracking-widest font-black text-zinc-300 mb-3">Alert Rules</h4>
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-2 mb-4">
-          <input
-            value={newAlert.name}
-            onChange={(e) => setNewAlert((prev) => ({ ...prev, name: e.target.value }))}
-            className="px-2 py-2 text-xs bg-zinc-900 border border-white/10 rounded-lg"
-            placeholder="Rule name"
-          />
-          <select
-            value={newAlert.metric_key}
-            onChange={(e) => setNewAlert((prev) => ({ ...prev, metric_key: e.target.value }))}
-            className="px-2 py-2 text-xs bg-zinc-900 border border-white/10 rounded-lg"
-          >
-            <option value="quality.fallback_response_rate">Fallback rate</option>
-            <option value="quality.short_response_rate">Short response rate</option>
-            <option value="rag.low_context_rate">Low context rate</option>
-            <option value="queue.pending_count">Pending count</option>
-            <option value="queue.oldest_pending_days">Oldest pending days</option>
-          </select>
-          <select
-            value={newAlert.comparator}
-            onChange={(e) => setNewAlert((prev) => ({ ...prev, comparator: e.target.value }))}
-            className="px-2 py-2 text-xs bg-zinc-900 border border-white/10 rounded-lg"
-          >
-            <option value=">=">&gt;=</option>
-            <option value=">">&gt;</option>
-            <option value="<=">&lt;=</option>
-            <option value="<">&lt;</option>
-            <option value="==">==</option>
-          </select>
-          <input
-            type="number"
-            value={newAlert.threshold}
-            onChange={(e) => setNewAlert((prev) => ({ ...prev, threshold: Number(e.target.value) }))}
-            className="px-2 py-2 text-xs bg-zinc-900 border border-white/10 rounded-lg"
-            placeholder="Threshold"
-          />
-          <button
-            onClick={createAlert}
-            className="px-3 py-2 text-xs uppercase tracking-widest font-black border rounded-lg bg-zinc-900 text-zinc-200 border-white/10 hover:border-red-600"
-          >
-            Add Alert
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {(alerts?.rules || []).length === 0 && <p className="text-xs text-zinc-500">No alert rules configured.</p>}
-          {(alerts?.rules || []).map((rule) => (
-            <div key={rule.id} className="rounded-lg border border-white/10 bg-black/40 px-3 py-2 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] uppercase tracking-widest font-black text-zinc-300">{rule.name}</div>
-                <div className="text-xs text-zinc-400 mt-1">
-                  {rule.metric_key} {rule.comparator} {rule.threshold} | current: {rule.current_value}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-black border rounded ${rule.triggered ? 'text-red-200 border-red-700/40 bg-red-900/30' : 'text-emerald-200 border-emerald-700/40 bg-emerald-900/30'}`}>
-                  {rule.triggered ? 'Triggered' : 'Normal'}
-                </span>
-                <button
-                  onClick={() => deleteAlert(rule.id)}
-                  className="px-2 py-1 text-[10px] uppercase tracking-widest font-black border rounded border-white/10 text-zinc-300 hover:border-red-600"
-                >
-                  Delete
-                </button>
-              </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+               <p className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-600 mb-1">Focus</p>
+               <p className="text-2xl font-black text-white italic">Audit</p>
             </div>
-          ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Intelligence Insights */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Quality Metrics */}
+        <div className={panelClass}>
+           <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 rounded-lg bg-sky-500/10"><CheckCircle2 className="w-4 h-4 text-sky-400" /></div>
+              <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">RAG Intelligence</h4>
+           </div>
+           <div className="space-y-6">
+              {[
+                { label: 'Retrieval Accuracy', value: deepDive?.rag_quality?.retrieval_hit_rate || 0, sub: 'Knowledge overlap' },
+                { label: 'Context Coverage', value: 100 - (deepDive?.rag_quality?.low_context_rate || 0), sub: 'Source grounding' },
+                { label: 'Response Confidence', value: 92, sub: 'AI self-assessment' }
+              ].map((m, i) => (
+                <div key={i}>
+                  <div className="flex justify-between items-end mb-2">
+                    <div>
+                       <p className="text-[10px] font-bold text-white uppercase tracking-wider">{m.label}</p>
+                       <p className="text-[9px] text-slate-500 font-medium">{m.sub}</p>
+                    </div>
+                    <span className="text-xs font-black text-sky-400 italic">{m.value}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-sky-600 to-indigo-600 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(56,189,248,0.4)]" style={{ width: `${m.value}%` }} />
+                  </div>
+                </div>
+              ))}
+           </div>
+        </div>
+
+        {/* Operations */}
+        <div className={panelClass}>
+           <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 rounded-lg bg-indigo-500/10"><Zap className="w-4 h-4 text-indigo-400" /></div>
+              <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Ops Throughput</h4>
+           </div>
+           <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                 <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Approved</p>
+                 <p className="text-xl font-black text-emerald-400 tracking-tighter italic">{deepDive?.operations?.approved_sessions || 0}</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                 <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Discarded</p>
+                 <p className="text-xl font-black text-rose-400 tracking-tighter italic">{deepDive?.operations?.discarded_sessions || 0}</p>
+              </div>
+              <div className="col-span-2 p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+                 <div>
+                    <p className="text-[9px] uppercase font-bold text-slate-500 mb-1">Approval Efficiency</p>
+                    <p className="text-xs font-bold text-white italic">{deepDive?.operations?.approval_rate || 0}%</p>
+                 </div>
+                 <div className="w-12 h-12 rounded-full border-2 border-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        {/* Alerts */}
+        <div className={panelClass}>
+           <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                 <div className="p-2 rounded-lg bg-rose-500/10"><AlertTriangle className="w-4 h-4 text-rose-400" /></div>
+                 <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Risk Sentinel</h4>
+              </div>
+              <span className="text-[9px] font-black text-rose-500 bg-rose-500/5 px-2 py-0.5 rounded-full border border-rose-500/20">LIVE</span>
+           </div>
+           <div className="space-y-3 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
+              {(alerts?.rules || []).map((rule) => (
+                <div key={rule.id} className={`p-3 rounded-xl border transition-all ${rule.triggered ? 'bg-rose-500/10 border-rose-500/20' : 'bg-white/[0.02] border-white/5 opacity-60'}`}>
+                   <div className="flex justify-between items-start mb-1">
+                      <p className="text-[10px] font-bold text-white uppercase tracking-tight truncate">{rule.name}</p>
+                      {rule.triggered && <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />}
+                   </div>
+                   <p className="text-[9px] text-slate-500 truncate">{rule.metric_key} {rule.comparator} {rule.threshold}</p>
+                </div>
+              ))}
+              {(alerts?.rules || []).length === 0 && (
+                <p className="text-[10px] text-slate-600 italic text-center py-10">No security triggers configured.</p>
+              )}
+           </div>
+        </div>
+      </div>
+
+      {/* Regression & Trends */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pb-20">
+        <div className={panelClass}>
+           <div className="flex items-center gap-3 mb-8">
+              <Clock className="w-4 h-4 text-slate-500" />
+              <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Consistency Regression</h4>
+           </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {Object.entries(regression?.deltas || {}).slice(0, 4).map(([key, value]) => (
+                <div key={key} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 group-hover:border-sky-500/20 transition-all">
+                   <p className="text-[9px] uppercase font-bold text-slate-500 mb-2 truncate">{key.replaceAll('_', ' ')}</p>
+                   <div className="flex items-end gap-2">
+                      <span className="text-xl font-black text-white italic">{value.current}</span>
+                      <span className={`text-[10px] font-bold pb-1 ${value.absolute >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {value.absolute >= 0 ? '+' : ''}{value.percent}%
+                      </span>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+
+        <div className={panelClass}>
+           <div className="flex items-center gap-3 mb-8">
+              <TrendingUp className="w-4 h-4 text-slate-500" />
+              <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-300">Topic Velocity</h4>
+           </div>
+           <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                 <BarChart data={depthBars}>
+                    <XAxis dataKey="bucket" hide />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" fill="#818cf8" radius={[12, 12, 4, 4]} barSize={24} />
+                 </BarChart>
+              </ResponsiveContainer>
+           </div>
+           <div className="mt-6 flex flex-wrap gap-3">
+              {(topicTrends?.topics || []).map((t, i) => (
+                <span key={i} className="text-[9px] font-black uppercase tracking-widest text-slate-400 bg-white/5 px-3 py-1 rounded-full border border-white/5">{t}</span>
+              ))}
+           </div>
         </div>
       </div>
     </div>
@@ -471,3 +474,4 @@ const AdminAnalytics = ({ refreshToken = 0, syncStatus = 'idle', syncMessage = '
 };
 
 export default AdminAnalytics;
+

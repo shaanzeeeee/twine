@@ -281,7 +281,7 @@ const AdminDashboard = () => {
             {/* Sidebar */}
             <div
                 data-testid="admin-sidebar"
-                className={`fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0f0f0f] border-r border-white/5 flex flex-col h-full shadow-2xl transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+                className={`fixed md:static inset-y-0 left-0 z-30 w-80 bg-[#0B0F1A]/95 backdrop-blur-3xl border-r border-white/5 flex flex-col h-full shadow-[20px_0_50px_rgba(0,0,0,0.5)] transform transition-transform duration-500 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
             >
                 <div className="p-6 border-b border-white/[0.05] flex justify-between items-center bg-[#0D0D15]">
                     <div className="flex items-center gap-3">
@@ -386,37 +386,48 @@ const AdminDashboard = () => {
                             Analytics mode active
                         </div>
                     )}
-                    {sessions.map((session) => (
-                        <button
-                            key={session.session_id}
-                            onClick={async () => {
-                                await loadSessionDetails(session);
-                                closeSidebar();
-                            }}
-                            className={`w-full text-left p-4 transition-all duration-300 relative group overflow-hidden border-b border-white/[0.03] ${
-                                selectedSession?.session_id === session.session_id
-                                ? 'bg-sky-500/[0.03] border-l-2 border-sky-500'
-                                : 'hover:bg-white/[0.02]'
-                            } ${viewMode !== 'transcripts' ? 'opacity-40 pointer-events-none' : ''}`}
-                        >
-                            <div className="flex justify-between items-start relative z-10">
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                    selectedSession?.session_id === session.session_id ? 'text-sky-400' : 'text-slate-400'
-                                }`}>
-                                    {session.guest_name ? session.guest_name : `Session #${session.session_id}`}
-                                </span>
-                                <ChevronRight size={12} className={selectedSession?.session_id === session.session_id ? 'text-sky-500' : 'text-slate-800'} />
-                            </div>
-                            <span className="text-[9px] font-bold text-slate-600 mt-1 block tracking-tight">
-                                {formatDateTime(session.created_at)} • {session.message_count} Events
-                            </span>
-                            <span className={`inline-block mt-2 px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-black border ${
-                                session.status === 'reviewed' ? 'text-emerald-400 bg-emerald-500/5 border-emerald-500/10' : 'text-amber-400 bg-amber-500/5 border-amber-500/10'
-                            }`}>
-                                {(session.status || 'pending_review').replace('_', ' ')}
-                            </span>
-                        </button>
-                    ))}
+                    {sessions.map((session) => {
+                        const isSelected = selectedSession?.session_id === session.session_id;
+                        return (
+                            <button
+                                key={session.session_id}
+                                onClick={async () => {
+                                    await loadSessionDetails(session);
+                                    closeSidebar();
+                                }}
+                                className={`w-full text-left p-5 transition-all duration-300 relative group border-b border-white/[0.03] ${
+                                    isSelected
+                                    ? 'bg-sky-500/[0.06] border-l-[3px] border-sky-400'
+                                    : 'hover:bg-white/[0.02]'
+                                } ${viewMode !== 'transcripts' ? 'opacity-30 pointer-events-none' : ''}`}
+                            >
+                                <div className="flex justify-between items-start mb-1">
+                                    <span className={`text-[11px] font-black uppercase tracking-[0.15em] ${
+                                        isSelected ? 'text-sky-400' : 'text-slate-200'
+                                    }`}>
+                                        {session.guest_name ? session.guest_name : `Session ${session.session_id}`}
+                                    </span>
+                                    <ChevronRight size={12} className={`transition-transform duration-300 ${isSelected ? 'text-sky-500 translate-x-1' : 'text-slate-800'}`} />
+                                </div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Clock size={10} className="text-slate-600" />
+                                    <span className="text-[9px] font-bold text-slate-500 tracking-tight">
+                                        {formatDateTime(session.created_at)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded">
+                                        {session.message_count} Events
+                                    </span>
+                                    <span className={`px-2 py-0.5 text-[8px] uppercase tracking-[0.1em] font-black rounded-sm border ${
+                                        session.status === 'reviewed' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-sky-400 bg-sky-500/10 border-sky-500/20'
+                                    }`}>
+                                        {(session.status || 'pending').replace('_', ' ')}
+                                    </span>
+                                </div>
+                            </button>
+                        );
+                    })}
                     {sessions.length === 0 && (
                         <div className="p-4 text-center space-y-3">
                             <p className="text-[10px] uppercase font-bold text-zinc-700 tracking-widest">No sessions found</p>
@@ -555,20 +566,20 @@ const AdminDashboard = () => {
                             {(selectedSession.messages || []).map((msg) => {
                                 const isUser = msg.role === 'user';
                                 return (
-                                    <div key={msg.id} className={`flex max-w-[90%] ${isUser ? 'ml-auto justify-end' : 'mr-auto justify-start'}`}>
-                                        <div className={`relative w-full px-4 sm:px-6 py-3 sm:py-4 shadow-2xl transition-all border border-white/5 backdrop-blur-sm ${
+                                    <div key={msg.id} className={`flex w-full ${isUser ? 'justify-end pl-12' : 'justify-start pr-12'}`}>
+                                        <div className={`relative px-5 py-4 shadow-xl transition-all border border-white/5 backdrop-blur-md rounded-2xl ${
                                             isUser 
-                                            ? 'bg-red-600/90 text-white skew-x-[-2deg]' 
-                                            : 'bg-zinc-900/90 text-zinc-100 skew-x-[2deg]'
+                                            ? 'bg-sky-600/20 text-sky-50 border-sky-500/20 rounded-tr-none' 
+                                            : 'bg-slate-900/60 text-slate-100 border-white/5 rounded-tl-none'
                                         }`}>
-                                            <div className={`mb-2 text-[10px] uppercase tracking-widest font-black flex items-center justify-between gap-3 ${isUser ? 'text-red-100 skew-x-[2deg]' : 'text-zinc-400 skew-x-[-2deg]'}`}>
-                                                <span>{isUser ? 'User' : 'Assistant'}</span>
+                                            <div className={`mb-2 text-[9px] uppercase tracking-[0.2em] font-black flex items-center gap-3 ${isUser ? 'text-sky-400' : 'text-slate-500'}`}>
+                                                <span>{isUser ? 'Internal Query' : 'Engine Response'}</span>
+                                                <span className="opacity-40">•</span>
                                                 <span>{formatDateTime(msg.timestamp || selectedSession.created_at)}</span>
                                             </div>
-                                            <div className={`text-sm font-medium leading-relaxed ${isUser ? 'skew-x-[2deg]' : 'skew-x-[-2deg]'}`}>
+                                            <div className="text-sm font-medium leading-relaxed tracking-tight">
                                                 {msg.content}
                                             </div>
-                                            
                                         </div>
                                     </div>
                                 );
