@@ -55,7 +55,7 @@ async def chat_endpoint(request: ChatRequest, req: Request, db: Session = Depend
             )
             
             return ChatResponse(
-                response="✅ Understood, Luka. I've updated my memory. I will prioritize this answer in the future.",
+                response="✅ Understood, Sir. I've updated my memory. I will prioritize this answer in the future.",
                 session_id=request.session_id
             )
 

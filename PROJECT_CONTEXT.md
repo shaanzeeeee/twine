@@ -1,82 +1,63 @@
-# LukaBot Project Context
+# Twine Project Context
 
 ## Overview
-- **Project**: LukaBot - AI chatbot for KingsBox founder persona
-- **Stack**: FastAPI, PostgreSQL, ChromaDB (vector store), OpenAI GPT-4
-- **Purpose**: RAG-based AI assistant that answers HR/compensation questions with personal context
+- **Project**: Twine - Persona Intelligence Engine
+- **Stack**: FastAPI, PostgreSQL, ChromaDB (Vector Store), OpenAI GPT-4o
+- **Purpose**: Hybrid RAG-based AI assistant designed for high-fidelity persona synthesis and real-time knowledge curation.
 
 ## Architecture
 ```
-User → API → ChatService → RAG (Chroma) → OpenAI → Response
+User → API → ChatService → Hybrid RAG (Chroma) → OpenAI → Response
                 ↓
-            PostgreSQL (sessions, messages, learned_knowledge)
+            PostgreSQL (Sessions, Messages, Priority Knowledge)
 ```
 
 ## Key Components
 
-### API Endpoints (api/)
-- **chat.py**: `/chat` - Main chat endpoint
-  - Supports guest mode (no auth)
-  - Supports `!learn` command for admins to teach priority knowledge
-  - Stores all messages in PostgreSQL
-- **auth.py**: Authentication endpoints
-- **admin.py**: Admin endpoints (review sessions, analytics)
+### API Tier (backend/api/)
+- **chat.py**: `/chat` - Primary conversational endpoint.
+  - Guest mode persistence support.
+  - `!learn` protocol for real-time admin knowledge injection.
+- **auth.py**: Enterprise-grade JWT authentication and role-based access.
+- **admin.py**: Dashboard telemetry and session moderation endpoints.
 
-### Services (services/)
-- **chat_service.py**: Core chat logic
-  - Safety check using GPT-4o-mini
-  - RAG lookup from Chroma (gold + kb collections)
-  - GPT-4o for response generation
-- **chroma_service.py**: Vector store
-  - Two collections: `lukabot_kb` (Drive files) and `lukabot_gold` (upvoted/prioritized)
-  - OpenAI embeddings (text-embedding-3-small)
-- **drive_sync.py**: Google Drive sync to Chroma
+### Intelligence Tier (backend/services/)
+- **chat_service.py**: Orchestrates the persona logic.
+  - Multi-stage safety filtering via GPT-4o-mini.
+  - Hybrid RAG retrieval from prioritized collections.
+- **chroma_service.py**: High-performance vector operations.
+  - Dual-collection architecture: `twine_kb` (Drive) and `twine_gold` (Priority).
+  - High-dimensional embeddings via `text-embedding-3-small`.
+- **drive_sync.py**: Automated synchronization of Google Drive repositories into the vector space.
 
-### Database Models (models/sql_models.py)
-- **User**: email, role (Admin/User), hashed_password
-- **ChatSession**: user_id, guest_name, review_status, discarded_at, discard_reason
-- **Message**: session_id, role, content, timestamp, upvoted
-- **KnowledgeMetadata**: source_id, source_url (Drive file tracking)
-- **LearnedKnowledge**: admin-taught priority facts
+### Persistent Memory (backend/models/sql_models.py)
+- **User**: Secure identity management with role-based permissions.
+- **ChatSession**: Advanced session tracking with moderation status and metadata.
+- **Message**: Granular message history with feedback loops (upvotes/downvotes).
+- **LearnedKnowledge**: High-priority facts injected via the admin layer.
 
-### Core (core/)
-- **config.py**: Settings via pydantic (from .env)
-- **database.py**: SQLAlchemy engine
-- **prompts.py**: LUKA_SYSTEM_PROMPT (founder persona)
-- **security.py**: JWT token handling
+### Engine Core (backend/core/)
+- **config.py**: Pydantic-driven environment management.
+- **prompts.py**: PERSONA_SYSTEM_PROMPT (Advanced founder synthesis).
+- **security.py**: Hardened JWT and password hashing protocols.
 
-## Key Files
-- **main.py**: FastAPI app entry, routers, lifespan (background scheduler)
-- **core/prompts.py**: System prompts for LLM
+## Environment Architecture
+- **DATABASE_URL**: Neon PostgreSQL (Serverless)
+- **CHROMA_DB_DIR**: Local vector persistence.
+- **OPENAI_API_KEY**: Engine intelligence key.
+- **SECRET_KEY**: Security signing key.
+- **DRIVE_CONFIG**: Folder ID, Credentials, and Token management.
 
-## Environment Variables (.env)
-- DATABASE_URL
-- CHROMA_DB_DIR
-- OPENAI_API_KEY
-- SECRET_KEY
-- DRIVE_FOLDER_ID, CREDENTIALS_FILE, TOKEN_FILE
+## Strategic Intelligence Flows
 
-## Key Flows
+### Hybrid Retrieval Priority
+1. **Gold Layer**: Admin-taught priority facts (Immediate retrieval).
+2. **Knowledge Layer**: Drive-ingested document chunks (Contextual retrieval).
 
-### Chat Flow
-1. User sends message → chat endpoint
-2. Optional `!learn` command → save to `learned_knowledge` + Chroma gold
-3. Resolve/create ChatSession (auth user or guest)
-4. Save user message to DB
-5. Safety check → reject if needed
-6. RAG lookup → Chroma (gold + kb)
-7. LLM generation → OpenAI GPT-4o
-8. Save assistant message to DB
-9. Return response
+### Admin Oversight
+- **Real-time Injection**: Teach facts instantly via `!learn [content]`.
+- **Session Audit**: Review, approve, or discard conversational outputs.
+- **Operational Analytics**: Monitor engine velocity and accuracy via the premium dashboard.
 
-### RAG Priority
-- Gold collection (admin-taught) > KB collection (Drive files)
-
-### Admin Capabilities
-- Teach priority knowledge via `!learn [fact]`
-- Review sessions, mark as approved/discarded
-- View analytics
-
-## Testing
-- Tests in `tests/` directory
-- Run: `python run_tests.py`
+---
+© 2026 Twine Intelligence Engine | Internal System Documentation
