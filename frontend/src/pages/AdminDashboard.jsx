@@ -6,7 +6,9 @@ import {
     ArrowLeft,
     LogOut,
     Sparkles,
+    Clock,
     ChevronRight,
+
     Database,
     Trash2,
     Menu,
