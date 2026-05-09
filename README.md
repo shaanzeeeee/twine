@@ -5,7 +5,7 @@
 Twine is a premium, retrieval-augmented intelligence system designed to synthesize complex knowledge into a high-fidelity digital persona. Built with a "Cyber-Industrial" aesthetic, it combines advanced RAG (Retrieval-Augmented Generation) with deep administrative oversight to deliver a state-of-the-art conversational experience.
 
 ## 🚀 Live Demo
-**Frontend**: [twine-persona.vercel.app](https://twine-git-main-shaans-projects-50ae0416.vercel.app/)  
+**Frontend**: [[twine-persona.vercel.app](https://twine-rag.vercel.app/)](https://twine-git-main-shaans-projects-50ae0416.vercel.app/)  
 **Backend**: [twine-backend.onrender.com](https://twine-backend-4kwc.onrender.com/api)
 
 ---
